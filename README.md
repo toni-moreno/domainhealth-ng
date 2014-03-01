@@ -1,0 +1,139 @@
+DomainHeatlh-NG
+==============
+
+DomainHealth-NG is a fork from the DomainHealth Tool done by  Paul Done that you can find at 
+
+http://sourceforge.net/projects/domainhealth
+
+A tool designed to provide administrarors with a quick and easy way to monitor a set WebLogic servers effectively. Entineered to have a minimal performance Impact on the managed servers in the domain. DomainHealth supports all WebLogic version from 9.0 to 12.1.x.
+
+
+The main goal of this fork is to add graphite as backend to store metric data and analize them.
+
+This project will focus efforts on collecting and selecting  metrics from any weblogic server better than store or render.
+
+Building From Source
+--------------------
+
+This project includes an Ant buildfile in the root directory to enable the project to be completely re-built from source and modified and enhanced where necessary. The project also includes an Eclipse '.project' Project file, enabling developers to optionally use Eclipse to modify the source (just import DomainHealth as an existing project into Eclipse).
+
+To re-build the project, first ensure the Java 1.5.x SDK and Ant 1.6+ is installed and their 'bin' directories are present in PATH environment variable, then check the values in the local.properties file in the project's
+root directory to ensure this reflects your local WebLogic environment settings. 
+
+Run the following commands to clean the project, compile the source code and build the WAR web-application:
+
+```
+ > ant clean
+ > ant
+```
+
+OPTIONAL: To run the unit tests for the project, copy the JUnit archive ('junit.jar') from this project's 'lib' directory into 'ANT_HOME/lib'm and then run:
+
+```
+ > ant test
+```
+
+OPTIONAL: To automatically deploy the generated WAR web-application to a running WebLogic Server, first modify the 'local.properties' file in the root of the project, to reflect the required WebLogic settings and then run:
+
+```
+ > ant deploy
+```
+
+To undeploy the application, run:
+
+```
+ > ant undeploy
+```
+
+Install
+-------
+
+Once  you have the domainhealth-XXX.war package you can Install in two ways
+
+1. with ant deploy task as the previous section said.
+2. with the console in the AdminServer.
+
+
+Configuration
+-------------
+
+DomainHealth-NG have maintained the old configuration system from Original DomainHealth with -D<parameter_key>=<value> style config but also introduces a new dh_global.properties file to centralize all config parameters and simplify changes and maintenance.
+
+In this way you should configure by setting only one parameter dh_config_file as the only JAVA_OPTIONS to add. An default dh_global.properties is located at the root of the sources directory.
+
+1.-  Edit setDomainEnv.sh and add at the end.
+
+```
+case ${SERVER_NAME} 
+        AdminServer)
+        echo "Enabling DomainHealth Config"
+        eport JAVA_OPTIONS="$JAVA_OPTIONS -Ddh_config_file=/absolute_path/dh_global.properties"
+       ;; 
+esac
+```
+
+
+2.- Edit dh_global.properties
+
+
+Configuration Parameters
+------------------------
+
+***Base Configuration Parameters***
+
+ 
+* **dh_always_use_jmxpoll:** Forces DH to always use JMX polling to collect metrics rather than allowing DH to decide for itself what to use (which in WLS 10.3+ would otherwise default to using WLDF Harvesting).
+* **dh_query_interval_secs:** The gap in seconds between consecutive statistic collections (making this too small could impact server performance).
+* **dh_backend_output:**  Select with backend to use graphite,csvfile,both
+
+***Metric Configuration Parameters***
+
+* **dh_component_blacklist:** The list of deployed application names which should not have statistics collected or displayed - usually used to prevent WebLogic internal applications from appearing in results
+
+
+***CSV Configuration Parameters***
+
+* **dh_stats_output_path:**  Defines the absolute or relative (to server start-up dir) path of the root directory where DH should store captured CSV statistic files. Default ./logs/statistics
+* **dh_csv_retain_num_days:**  The number of days to retain captured CSV data log files for (older ones are automatically removed by DomainHealth to help limit file-system capacity consumption).
+
+
+***Graphite Configuration Parameters***
+
+
+* **dh_graphite_carbon_host:** Graphite carbon server carbon (Graphite) Default: localhost
+* **dh_graphite_carbon_port:** carbon port ( Graphite) Default: 2003
+* **dh_graphite_reconnect_timeout:** Reconnection attempt time after connection lost in seconds. Default: 60 seconds
+* **dh_graphite_send_buffer_size:**  Graphite output buffer size on heavily loaded systems better big buffers. Default: 1Mb
+* **dh_graphite_metric_use_host:** Enable a metric tree based on host better than a domain tree based approach. Default: True
+* **dh_graphite_metric_host_prefix:** hostname prefix. Default: pro.bbdd
+* **dh_graphite_metric_host_suffix:** hostname suffix. Default: wl
+* **dh_graphite_default_host:**  “Machine” Name it uses in host based approach ( if not properly configured with console ) and the hostname in the AdminServer data. Default: default_host 
+* **dh_graphite_metric_force_domain_name:** fix bug on read weblogic domain name on server startup in 9.2. Default: my_domain:  
+* **dh_graphite_map_server_stats:**  Map server stats to numbers so the graphite backend will be able to store and render after.
+ - SHUTDOWN(0)
+ - STARTING(1)
+ - STANDBY(2)
+ - ADMIN(3)
+ - RESUMING(4)
+ - RUNNING(5)
+ - SHUTTING_DOWN(7)
+ - SUSPENDING(6)
+ - FORCE_SUSPENDING(8)
+
+
+
+
+Graphite Tree Model
+-------------------
+
+1.- Host Based ( by default)
+
+```
+<HOST_PREFIX>.<HOST>.<HOST_SUFFIX>.<DOMAIN_NAME>.<SERVER_INSTANCE_NAME>.<RESOURCE_TYPE>.<RESOURCE_NAME>.<METRIC_NAME>
+```
+
+2.- Domain Based.
+
+```
+<DOMAIN_NAME>.<SERVER_INSTANCE_NAME>.<RESOURCE_TYPE>.<RESOURCE_NAME>.<METRIC_NAME>
+```
