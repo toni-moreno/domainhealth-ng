@@ -119,6 +119,7 @@ Configuration Parameters
  - SHUTTING_DOWN(7)
  - SUSPENDING(6)
  - FORCE_SUSPENDING(8)
+* **dh_graphite_report_dhstats:**  Send data about Domainhealth data retrieval (Only reported over graphite backend). Default : True
 
 
 
@@ -132,8 +133,19 @@ Graphite Tree Model
 <HOST_PREFIX>.<HOST>.<HOST_SUFFIX>.<DOMAIN_NAME>.<SERVER_INSTANCE_NAME>.<RESOURCE_TYPE>.<RESOURCE_NAME>.<METRIC_NAME>
 ```
 
+
 2.- Domain Based.
 
 ```
 <DOMAIN_NAME>.<SERVER_INSTANCE_NAME>.<RESOURCE_TYPE>.<RESOURCE_NAME>.<METRIC_NAME>
 ```
+
+On both models you can get information on how many and how lond data is gathered on each managed server over de domain tree.
+
+
+```
+XXXXX.<DOMAIN_NAME>.dh_stats.servers.<SERVER_INSTANCE_NAME>.retrieve_time
+XXXXX.<DOMAIN_NAME>.dh_stats.servers.<SERVER_INSTANCE_NAME>.number_metrics
+```
+
+
