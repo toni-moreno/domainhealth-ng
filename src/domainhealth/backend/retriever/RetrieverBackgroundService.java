@@ -73,10 +73,15 @@ public class RetrieverBackgroundService {
 			queryIntervalSecs = MINIMUM_SLEEP_SECS;
 		}
 
-		queryIntervalMillis = queryIntervalSecs * ONE_SECOND_MILLIS;
-		minPollIntervalMillis = (int) (MIN_POLL_FACTOR * queryIntervalMillis);
-		maxPollIntervalMillis = (int) (MAX_POLL_FACTOR * queryIntervalMillis);		
-		componentBlacklist = tokenizeBlacklistText(appProps.getProperty(PropKey.COMPONENT_BLACKLIST_PROP));
+		queryIntervalMillis 	= queryIntervalSecs * ONE_SECOND_MILLIS;
+		minPollIntervalMillis 	= (int) (MIN_POLL_FACTOR * queryIntervalMillis);
+		maxPollIntervalMillis 	= (int) (MAX_POLL_FACTOR * queryIntervalMillis);		
+		componentBlacklist 	= tokenizeBlacklistText(appProps.getProperty(PropKey.COMPONENT_BLACKLIST_PROP));
+		metricTypeSet 		= tokenizeTypesText(appProps.getProperty(PropKey.METRIC_TYPE_SET_PROP));
+                for (String type : this.metricTypeSet) {
+                      AppLog.getLogger().info("initialized Statistic Capturer metric SET: " + type.toString());
+                }
+
 		WorkManager localCaptureThreadsWkMgr = null;
 
 		try {
@@ -91,7 +96,7 @@ public class RetrieverBackgroundService {
                 String backend_output=appProps.getProperty(PropKey.BACKEND_OUTPUT_PROP);
                 boolean use_graphite=(backend_output.equals("graphite") | backend_output.equals("both"));
 
-		this.sendDHStatsToGraphite=(dhstats | use_graphite);
+		this.sendDHStatsToGraphite=(dhstats & use_graphite);
 	}
 
 	public void setSender(GraphiteBackgroundSender gSender) {
@@ -278,11 +283,13 @@ public class RetrieverBackgroundService {
 					public void doRun() {
 						try {
 							if(sendDHStatsToGraphite) { 
+								//internal metric counters
 								gSender.resetCounter(serverName);
 								long start_time=System.currentTimeMillis();	
 								capturer.captureAndLogServerStats();
 								long end_time=System.currentTimeMillis();
 								String elapsed=Long.toString(end_time-start_time);
+								//send gathering statistics metrics over the graphite backend 
 								gSender.sendDHData("servers",serverName,"retrieve_time",elapsed);
 								AppLog.getLogger().info("CAPTURER LOOP for server "+ serverName +" : complete :" +elapsed+ " ms");
 							}
@@ -323,9 +330,9 @@ public class RetrieverBackgroundService {
 	 */
 	private StatisticCapturer getStatisticCapturer(DomainRuntimeServiceMBeanConnection conn, ObjectName serverRuntime, String serverName) {
 		if (useWLDFHarvester) {
-			return new StatisticCapturerWLDFQuery(statisticsStorage, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, wlsVersionNumber);
+			return new StatisticCapturerWLDFQuery(statisticsStorage, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, metricTypeSet,wlsVersionNumber);
 		} else {
-			return new StatisticCapturerJMXPoll(statisticsStorage, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, wlsVersionNumber);
+			return new StatisticCapturerJMXPoll(statisticsStorage, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, metricTypeSet,wlsVersionNumber);
 		}
 	}
 		
@@ -421,6 +428,32 @@ public class RetrieverBackgroundService {
 	}
 
 	/**
+	 * Gets list of types to   gather data
+	   statistics collected and shown.
+	 * 
+	 * @param metricTypeSet The text containing comma separated list of names to ignore
+	 * @return A strongly type list of types to g 
+	 */
+	private List<String> tokenizeTypesText(String metricTypeText) {
+		List<String> typelist = new ArrayList<String>();
+		String[] typelistArray = null;
+		
+		if (metricTypeText != null) {
+			typelistArray = metricTypeText.split(BLACKLIST_TOKENIZER_PATTERN);
+		}
+		
+		if ((typelistArray != null) && (typelistArray.length > 0)) {
+			typelist = Arrays.asList(typelistArray);
+		} else {
+			typelist = new ArrayList<String>();
+			typelist.add("core");
+		}
+				
+		return typelist;
+	}
+
+
+	/**
 	 * Gets list of names of web-app and ejb components which should not have 
 	 * statistics collected and shown.
 	 * 
@@ -475,6 +508,7 @@ public class RetrieverBackgroundService {
 	private final int minPollIntervalMillis;
 	private final int maxPollIntervalMillis;
 	private final List<String> componentBlacklist;
+	private final List<String> metricTypeSet;
 	private String wlsVersionNumber = null;
 	private boolean useWLDFHarvester = false;
 	private final StatisticsStorage statisticsStorage;

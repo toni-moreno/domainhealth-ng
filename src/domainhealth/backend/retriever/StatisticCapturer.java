@@ -51,9 +51,10 @@ public abstract class StatisticCapturer {
 	 * @param serverRuntime Handle on the server's main runtime MBean
 	 * @param serverName Name of the server to retrieve statistics for
 	 * @param componentBlacklist Names of web-apps/ejbs than should not haves results collected/shown
+	 * @param metricTypeSet metric types to collect
 	 * @param wlsVersionNumber The version of the host WebLogic Domain
 	 */
-	public StatisticCapturer(StatisticsStorage csvStats, WebLogicMBeanConnection conn, ObjectName serverRuntime, String serverName, int queryIntervalMillis, List<String> componentBlacklist, String wlsVersionNumber) {
+	public StatisticCapturer(StatisticsStorage csvStats, WebLogicMBeanConnection conn, ObjectName serverRuntime, String serverName, int queryIntervalMillis, List<String> componentBlacklist, List<String> metricTypeSet,String wlsVersionNumber) {
 		this.csvStats = csvStats;
 		this.conn = conn;
 		this.serverRuntime = serverRuntime;
@@ -61,6 +62,7 @@ public abstract class StatisticCapturer {
 		this.queryIntervalMillis = queryIntervalMillis;
 		this.componentBlacklist = componentBlacklist;
 		this.wlsVersionNumber = wlsVersionNumber;
+		this.metricTypeSet = metricTypeSet;
 	}
 
 	/**
@@ -72,13 +74,31 @@ public abstract class StatisticCapturer {
 	 */
 	public final void captureAndLogServerStats() throws DataRetrievalException, IOException {
 		AppLog.getLogger().debug(getClass() + " initiated to collect stats for server:" + serverName);
-		logCoreStats();
-		logDataSourcesStats();
-		logDestinationsStats();
-		logWebAppStats();
-		logEJBStats();
-		logHostMachineStats();
-		logExtendedStats();
+		for (String type : metricTypeSet) {
+ 		   if(type.equals("core")){
+			logCoreStats();
+    		   } else if (type.equals("datasource")) {
+			logDataSourcesStats();	
+		   } else if (type.equals("jmsdestination")) {
+			logDestinationsStats();
+		   } else if (type.equals("webapp")) {
+			logWebAppStats();
+		   } else if (type.equals("ejb")) {
+			logEJBStats();
+		   } else if(type.equals("hostmachine")) {
+			logHostMachineStats();
+		   } else if(type.equals("extended")) {
+			logExtendedStats();
+		   }
+			
+		}
+		//logCoreStats();
+		//logDataSourcesStats();
+		//logDestinationsStats();
+		//logWebAppStats();
+		//logEJBStats();
+		//logHostMachineStats();
+		//logExtendedStats();
 	}
 
 	public final void setHost(String hostName)  {
@@ -311,6 +331,7 @@ public abstract class StatisticCapturer {
 	private String hostName;
 	private final int queryIntervalMillis;
 	private final List<String> componentBlacklist;
+	private final List<String> metricTypeSet;
 	private final String wlsVersionNumber;
 	private final DateFormat secondDateFormat = new SimpleDateFormat(DateUtil.DISPLAY_DATETIME_FORMAT);
 }

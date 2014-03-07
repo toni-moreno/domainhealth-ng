@@ -14,7 +14,13 @@
 //POSSIBILITY OF SUCH DAMAGE.
 package domainhealth.core.env;
 
-import weblogic.logging.NonCatalogLogger;
+//import weblogic.logging.NonCatalogLogger;
+import org.apache.log4j.Logger;
+import org.apache.log4j.Priority;
+import org.apache.log4j.Level;
+import org.apache.log4j.FileAppender;
+import org.apache.log4j.PatternLayout;
+import org.apache.log4j.ConsoleAppender;
 
 /**
  * Wrapper around a logging implementation to enable application debug, info
@@ -23,12 +29,36 @@ import weblogic.logging.NonCatalogLogger;
  * a simple wrapper around the WebLogic NonCatalogLogger logging API.  
  */
 public class AppLog {
+
+	public void setConfig(String filename,String level) {
+		FileAppender fa = new FileAppender();
+		fa.setName(DH_APP_NAME);
+		fa.setFile(filename);
+  		fa.setLayout(new PatternLayout("%d [%-5p][%r] %t | %x [%c] %m%n"));
+		fa.setThreshold(Level.toLevel(level));
+  		fa.setAppend(true);
+  		fa.activateOptions();
+		//removing all previous loggers.
+		Logger.getRootLogger().getLoggerRepository().resetConfiguration();
+		Logger.getRootLogger().addAppender(fa);
+		log = Logger.getLogger(DH_APP_NAME);
+	}
+
 	/**
-	 * Creates a new WebLogic non-catalog logger identified by the application 
+	 * Creates a  Log4j logger identified by the application 
 	 * name (DomainHealth)
 	 */
 	protected AppLog() {
-		log = new NonCatalogLogger(DH_APP_NAME);
+		//TODO: redirect by default to Standar Output.
+	 	ConsoleAppender console = new ConsoleAppender(); //create appender
+  	//configure the appender
+		console.setName("default");
+  		console.setLayout(new PatternLayout("%d [%p|%c|%C{1}] %m%n")); 
+  		console.setThreshold(Level.INFO);
+  		console.activateOptions();
+  	//add appender to any Logger (here is root)
+  		Logger.getRootLogger().addAppender(console);
+		this.log = Logger.getLogger("default");
 	}
 	
 	/**
@@ -46,7 +76,9 @@ public class AppLog {
 	 * @param msg The message to be logged
 	 */
 	public void critical(String msg) {
-		log.critical(msg);
+		if (log.isEnabledFor(Level.FATAL)) {
+			log.fatal(msg);
+		}
 	}
 
 	/**
@@ -55,7 +87,9 @@ public class AppLog {
 	 * @param msg The message to be logged
 	 */
 	public void error(String msg) {
-		log.error(msg);
+		if (log.isEnabledFor(Level.ERROR)) {
+			log.error(msg);
+		}
 	}
 
 	/**
@@ -65,7 +99,10 @@ public class AppLog {
 	 * @param t The root cause throwable instance
 	 */
 	public void error(String msg, Throwable t) {
-		log.error(msg, t);
+		if (log.isEnabledFor(Level.ERROR)) {
+			log.error(msg, t);
+		}
+		//log.error(msg, t);
 	}
 
 	/**
@@ -74,7 +111,9 @@ public class AppLog {
 	 * @param msg The message to be logged
 	 */
 	public void warning(String msg) {
-		log.warning(msg);
+		if (log.isEnabledFor(Level.WARN)) {
+			log.warn(msg);
+		}
 	}
 
 	/**
@@ -83,7 +122,9 @@ public class AppLog {
 	 * @param msg The message to be logged
 	 */	
 	public void notice(String msg) {
-		log.notice(msg);
+		if (log.isInfoEnabled()) {
+			log.info(msg);
+		}
 	}
 
 	/**
@@ -92,7 +133,9 @@ public class AppLog {
 	 * @param msg The message to be logged
 	 */
 	public void info(String msg) {
-		log.info(msg);
+		if (log.isInfoEnabled()) {
+			log.info(msg);
+		}
 	}
 
 	/**
@@ -104,7 +147,9 @@ public class AppLog {
 		if (debugToStandardOut) {
 			System.out.println(DH_APP_NAME + ": DEBUG - " + msg);
 		} else {
-			log.debug(msg);
+			if (log.isDebugEnabled()) {
+				log.debug(msg);
+			}
 		}
 	}
 
@@ -119,15 +164,18 @@ public class AppLog {
 			System.out.println(DH_APP_NAME + ": DEBUG - " + msg);
 			t.printStackTrace();
 		} else {
-			log.debug(msg, t);
+			if (log.isDebugEnabled()) {
+				log.debug(msg,t);
+			}
 		}		
 	}
 
 	// Members
-	private final NonCatalogLogger log;
+	
+	static Logger log ;
 	private static final AppLog instance = new AppLog();
 
 	// Constants
-	private static final String DH_APP_NAME = "DomainHealth";
+	private static final String DH_APP_NAME = "DomainHealth-NG";
 	private static final boolean debugToStandardOut = false;
 }

@@ -50,6 +50,16 @@ public class AppProperties extends Properties {
 		STATS_OUTPUT_PATH_PROP { public String toString() { return "dh_stats_output_path"; } },
 
 		/**
+		 * The OUTPUT_LOG_PATH property name ("dh_always_use_jmxpoll")
+		 */
+		OUTPUT_LOG_PATH_PROP { public String toString() { return "dh_output_log_path"; } },
+		
+		/**
+		 * The root statistics directory path property name ("dh_stats_output_path")
+		 */
+		OUTPUT_LOG_LEVEL_PROP { public String toString() { return "dh_output_log_level"; } },
+
+		/**
 		 * The the number of seconds between statistics collection queries property name ("dh_query_interval_secs")
 		 */
 		QUERY_INTERVAL_SECS_PROP { public String toString() { return "dh_query_interval_secs"; } },
@@ -58,6 +68,16 @@ public class AppProperties extends Properties {
 		 * The the number of seconds between statistics collection queries property name ("dh_component_blacklist")
 		 */
 		COMPONENT_BLACKLIST_PROP { public String toString() { return "dh_component_blacklist"; } },
+
+		/**
+		 * The metric type to get values among (core,datasource,jmsdestination,webapp,ejb,hostmachine,extended) 
+		 */
+		METRIC_TYPE_SET_PROP { public String toString() { return "dh_metric_type_set"; } },
+
+		/**
+		 * The metric deep set to get basic,extended,full 
+		 */
+		METRIC_DEEP_SET_PROP { public String toString() { return "dh_metric_deep_set"; } },
 
 		/**
 		 * The number of days of CSV files to retain. Use 0 or -1 to disable CSV cleanup ("dh_component_blacklist")

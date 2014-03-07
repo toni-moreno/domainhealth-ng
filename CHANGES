@@ -1,5 +1,15 @@
 DomainHealth-NG CHANGES
 =======================
+1.1.6: 07-Mar-2014 (Toni Moreno)
+  Fixed Bug on select only cvs backend.
+  Changed Weblogic Logs by Log4j
+  Added 2 new parameters to control output log.
+   - dh_output_log_path 
+   - dh_output_log_level
+  Added 2 new paramters to add control over kind and quantity of metrics to gather.
+   - dh_metric_type_set
+   - dh_metric_deep_set
+
 1.1.5: 31-Dec-2013 (Toni Moreno)
   Fixed minor bugs.
   Added parameter 'dh_graphite_send_buffer_size' and 'dh_graphite_metric_force_domain_name'

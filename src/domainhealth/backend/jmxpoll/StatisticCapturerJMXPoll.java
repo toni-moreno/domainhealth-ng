@@ -50,8 +50,8 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 	 * @param componentBlacklist Names of web-apps/ejbs than should not haves results collected/shown
 	 * @param wlsVersionNumber The version of the host WebLogic Domain
 	 */
-	public StatisticCapturerJMXPoll(StatisticsStorage csvStats, WebLogicMBeanConnection conn, ObjectName serverRuntime, String serverName, int queryIntervalMillis, List<String> componentBlacklist, String wlsVersionNumber) {
-		super(csvStats, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, wlsVersionNumber);
+	public StatisticCapturerJMXPoll(StatisticsStorage csvStats, WebLogicMBeanConnection conn, ObjectName serverRuntime, String serverName, int queryIntervalMillis, List<String> componentBlacklist, List<String> metricTypeSet, String wlsVersionNumber) {
+		super(csvStats, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, metricTypeSet,wlsVersionNumber);
 	}
 
 	/**

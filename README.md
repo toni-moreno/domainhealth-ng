@@ -94,7 +94,7 @@ In this way you should configure by setting only one parameter dh_config_file as
 case ${SERVER_NAME} 
         AdminServer)
         echo "Enabling DomainHealth Config"
-        eport JAVA_OPTIONS="$JAVA_OPTIONS -Ddh_config_file=/absolute_path/dh_global.properties"
+        export JAVA_OPTIONS="$JAVA_OPTIONS -Ddh_config_file=/absolute_path/dh_global.properties"
        ;; 
 esac
 ```
@@ -109,34 +109,39 @@ Configuration Parameters
 ***Base Configuration Parameters***
 
  
-* **dh_always_use_jmxpoll:** Forces DH to always use JMX polling to collect metrics rather than allowing DH to decide for itself what to use (which in WLS 10.3+ would otherwise default to using WLDF Harvesting).
-* **dh_query_interval_secs:** The gap in seconds between consecutive statistic collections (making this too small could impact server performance).
-* **dh_backend_output:**  Select with backend to use graphite,csvfile,both
+* __dh_always_use_jmxpoll__: Forces DH to always use JMX polling to collect metrics rather than allowing DH to decide for itself what to use (which in WLS 10.3+ would otherwise default to using WLDF Harvesting).
+* __dh_query_interval_secs__: The gap in seconds between consecutive statistic collections (making this too small could impact server performance).
+* __dh_backend_output__:  Select with backend to use graphite,csvfile,both
+* __dh_output_log_path__: The file where to log all DomainHealth-NG output
+* __dh_output_log_level__: Set the threshold level. All log events with lower level than the threshold level are ignored by the appender. Default: INFO
 
 ***Metric Configuration Parameters***
 
-* **dh_component_blacklist:** The list of deployed application names which should not have statistics collected or displayed - usually used to prevent WebLogic internal applications from appearing in results
+* __dh_metric_type_set__: type of metric to gather among (core,datasource,jmsdestination,webapp,ejb,hostmachine,extended) Default: All
+* __dh_metric_deep_set__: set of metrics to gather among (basic/full). Default: full
+* __dh_component_blacklist__: The list of deployed application names which should not have statistics collected or displayed - usually used to prevent WebLogic internal applications from appearing in results
+
 
 
 ***CSV Configuration Parameters***
 
-* **dh_stats_output_path:**  Defines the absolute or relative (to server start-up dir) path of the root directory where DH should store captured CSV statistic files. Default ./logs/statistics
-* **dh_csv_retain_num_days:**  The number of days to retain captured CSV data log files for (older ones are automatically removed by DomainHealth to help limit file-system capacity consumption).
+* __dh_stats_output_path__:  Defines the absolute or relative (to server start-up dir) path of the root directory where DH should store captured CSV statistic files. Default ./logs/statistics
+* __dh_csv_retain_num_days__:  The number of days to retain captured CSV data log files for (older ones are automatically removed by DomainHealth to help limit file-system capacity consumption).
 
 
 ***Graphite Configuration Parameters***
 
 
-* **dh_graphite_carbon_host:** Graphite carbon server carbon (Graphite) Default: localhost
-* **dh_graphite_carbon_port:** carbon port ( Graphite) Default: 2003
-* **dh_graphite_reconnect_timeout:** Reconnection attempt time after connection lost in seconds. Default: 60 seconds
-* **dh_graphite_send_buffer_size:**  Graphite output buffer size on heavily loaded systems better big buffers. Default: 1Mb
-* **dh_graphite_metric_use_host:** Enable a metric tree based on host better than a domain tree based approach. Default: True
-* **dh_graphite_metric_host_prefix:** hostname prefix. Default: pro.bbdd
-* **dh_graphite_metric_host_suffix:** hostname suffix. Default: wl
-* **dh_graphite_default_host:**  “Machine” Name it uses in host based approach ( if not properly configured with console ) and the hostname in the AdminServer data. Default: default_host 
-* **dh_graphite_metric_force_domain_name:** fix bug on read weblogic domain name on server startup in 9.2. Default: my_domain:  
-* **dh_graphite_map_server_stats:**  Map server stats to numbers so the graphite backend will be able to store and render after.
+* __dh_graphite_carbon_host__: Graphite carbon server carbon (Graphite) Default: localhost
+* __dh_graphite_carbon_port__: carbon port ( Graphite) Default: 2003
+* __dh_graphite_reconnect_timeout__: Reconnection attempt time after connection lost in seconds. Default: 60 seconds
+* __dh_graphite_send_buffer_size__:  Graphite output buffer size on heavily loaded systems better big buffers. Default: 1Mb
+* __dh_graphite_metric_use_host__: Enable a metric tree based on host better than a domain tree based approach. Default: True
+* __dh_graphite_metric_host_prefix__: hostname prefix. Default: pro.bbdd
+* __dh_graphite_metric_host_suffix__: hostname suffix. Default: wl
+* __dh_graphite_default_host__:  “Machine” Name it uses in host based approach ( if not properly configured with console ) and the hostname in the AdminServer data. Default: default_host 
+* __dh_graphite_metric_force_domain_name__: fix bug on read weblogic domain name on server startup in 9.2. Default: my_domain:  
+* __dh_graphite_map_server_stats__:  Map server stats to numbers so the graphite backend will be able to store and render after.
  - SHUTDOWN(0)
  - STARTING(1)
  - STANDBY(2)
@@ -146,7 +151,7 @@ Configuration Parameters
  - SHUTTING_DOWN(7)
  - SUSPENDING(6)
  - FORCE_SUSPENDING(8)
-* **dh_graphite_report_dhstats:**  Send data about Domainhealth data retrieval (Only reported over graphite backend). Default : True
+* __dh_graphite_report_dhstats__:  Send data about Domainhealth data retrieval (Only reported over graphite backend). Default : True
 
 
 

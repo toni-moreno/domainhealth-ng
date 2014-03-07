@@ -26,6 +26,7 @@ import domainhealth.core.env.AppProperties;
 import domainhealth.core.env.AppProperties.PropKey;
 import domainhealth.backend.retriever.RetrieverBackgroundService;
 import domainhealth.backend.sender.GraphiteBackgroundSender;
+import domainhealth.core.statistics.MonitorProperties;
 
 /**
  * Application start/deploy and stop/undeploy event listener to initialise and
@@ -58,9 +59,25 @@ public class AppStartStopListener extends GenericServlet {
 	 * @see javax.servlet.GenericServlet#init()
 	 */
 	public void init() throws ServletException {		
-		AppLog.getLogger().notice("Starting DomainHealth application");
+
+		//Redirect logs to where configured
+
 		AppProperties appProps = new AppProperties(getServletContext());
-		String outputPath = appProps.getProperty(PropKey.STATS_OUTPUT_PATH_PROP);		
+		String log_filename	=appProps.getProperty(PropKey.OUTPUT_LOG_PATH_PROP);
+		String log_level	=appProps.getProperty(PropKey.OUTPUT_LOG_LEVEL_PROP);
+		AppLog.getLogger().setConfig(log_filename,log_level);
+
+
+		AppLog.getLogger().notice("Starting DomainHealth application");
+
+		String outputPath 	=appProps.getProperty(PropKey.STATS_OUTPUT_PATH_PROP);		
+               	String metricDeepSet	=appProps.getProperty(PropKey.METRIC_DEEP_SET_PROP);
+                AppLog.getLogger().notice("initialized Statistic DEEP TO : " + metricDeepSet.toString());
+
+		//Setting Metric Set
+
+                MonitorProperties.setMetricDeep(metricDeepSet);
+
 		
 		if (outputPath == null) {
 			throw new ServletException("Neither a JVM start-up '-D parameter nor a web.xml context-param has been defined for parameter '" + PropKey.STATS_OUTPUT_PATH_PROP + "' to specify the root path of the CSV output path");
