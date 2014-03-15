@@ -91,9 +91,9 @@ In this way you should configure by setting only one parameter dh_config_file as
 1.-  Edit setDomainEnv.sh and add at the end.
 
 ```
-case ${SERVER_NAME} 
+case ${SERVER_NAME} in
         AdminServer)
-        echo "Enabling DomainHealth Config"
+        echo "Enabling DomainHealth NG Config"
         export JAVA_OPTIONS="$JAVA_OPTIONS -Ddh_config_file=/absolute_path/dh_global.properties"
        ;; 
 esac
