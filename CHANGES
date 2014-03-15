@@ -1,5 +1,11 @@
 DomainHealth-NG CHANGES
 =======================
+1.1.7: 15-Mar-2014 (Toni Moreno)
+  Fixed:Added default values to logfile and loglevel log4j values.
+  Redirect captured exceptions to log4j file.
+  added 5 new JRockit metrics.
+   - JVM_PROCESSOR_LOAD,TOTAL_GC_COUNT,TOTAL_GC_TIME,TOTAL_NURSERY_SIZE,HEAP_SIZE_MAX
+   
 1.1.6: 07-Mar-2014 (Toni Moreno)
   Fixed Bug on select only cvs backend.
   Changed Weblogic Logs by Log4j
