@@ -65,6 +65,9 @@ public class AppStartStopListener extends GenericServlet {
 		AppProperties appProps = new AppProperties(getServletContext());
 		String log_filename	=appProps.getProperty(PropKey.OUTPUT_LOG_PATH_PROP);
 		String log_level	=appProps.getProperty(PropKey.OUTPUT_LOG_LEVEL_PROP);
+		if((log_filename == null) || (log_filename.length() == 0 )) log_filename="./domainhealt.log";
+		if((log_level == null) || ( log_level.length() == 0 )) log_level="INFO";
+
 		AppLog.getLogger().setConfig(log_filename,log_level);
 
 
