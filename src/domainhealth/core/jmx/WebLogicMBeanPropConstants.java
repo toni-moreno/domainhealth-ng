@@ -402,6 +402,31 @@ public interface WebLogicMBeanPropConstants {
 	 * 'HeapFreePercent' MBean property
 	 */
 	public final static String HEAP_FREE_PERCENT = "HeapFreePercent"; 
+	/**/
+	/**
+	 * 'JvmProcessorLoad' MBean property
+	 */
+	public final static String JVM_PROCESSOR_LOAD = "JvmProcessorLoad"; 
+	
+	/**
+	 * 'TotalGarbageCollectionCount' MBean property
+	 */
+	public final static String TOTAL_GC_COUNT = "TotalGarbageCollectionCount"; 
+	
+	/**
+	 * 'TotalGarbageCollectionTime' MBean property
+	 */
+	public final static String TOTAL_GC_TIME = "TotalGarbageCollectionTime"; 
+	
+	/**
+	 * 'TotalNurserySize' MBean property
+	 */
+	public final static String TOTAL_NURSERY_SIZE = "TotalNurserySize"; 
+
+	/**
+	 * 'HeapSizeMax' MBean property
+	 */
+	public final static String HEAP_SIZE_MAX = "HeapSizeMax"; 
 	
 	/**
 	 * 'ExecuteThreadTotalCount' MBean property

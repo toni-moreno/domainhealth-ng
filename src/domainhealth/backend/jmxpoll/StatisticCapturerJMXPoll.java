@@ -85,14 +85,40 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 		line.append(getConn().getNumberAttr(serverRuntime, OPEN_SOCKETS) + SEPARATOR);
 		
 		// JVM attributes (got to do these separately because changing some figures to MegaBytes and calculate heap size current)
-		ObjectName jvm = getConn().getChild(getServerRuntime(), JVM_RUNTIME);
-		line.append((long)(getConn().getNumberAttr(jvm, HEAP_SIZE_CURRENT) / BYTES_IN_MEGABYTE) + SEPARATOR);
-		line.append((long)(getConn().getNumberAttr(jvm, HEAP_FREE_CURRENT) / BYTES_IN_MEGABYTE) + SEPARATOR);
-		line.append((long)((getConn().getNumberAttr(jvm, HEAP_SIZE_CURRENT) - getConn().getNumberAttr(jvm, HEAP_FREE_CURRENT)) / BYTES_IN_MEGABYTE) + SEPARATOR);
+		boolean useJRockit=false;
+		ObjectName jvm = getConn().getChild(serverRuntime, JVM_RUNTIME);
+		String jvmType=getConn().getTextAttr(jvm,"Type");
+		AppLog.getLogger().debug("JVM Runtime type:"+jvmType);
+		if (jvmType.equalsIgnoreCase("JRockitRuntime")) useJRockit=true;
+
+		long heap_size_current=(long)getConn().getNumberAttr(jvm, HEAP_SIZE_CURRENT);
+		long heap_free_current=(long)getConn().getNumberAttr(jvm, HEAP_FREE_CURRENT);
+		line.append((heap_size_current / BYTES_IN_MEGABYTE) + SEPARATOR);
+		line.append((heap_free_current / BYTES_IN_MEGABYTE) + SEPARATOR);
+		line.append(((heap_size_current - heap_free_current) / BYTES_IN_MEGABYTE) + SEPARATOR);
 		line.append(getConn().getNumberAttr(jvm, HEAP_FREE_PERCENT) + SEPARATOR);
 
+		if(useJRockit) {
+			double jvm_proc_load    =getConn().getNumberAttr(jvm,JVM_PROCESSOR_LOAD);
+			long total_gc_count    =(long)getConn().getNumberAttr(jvm,TOTAL_GC_COUNT);
+			long total_gc_time     =(long)getConn().getNumberAttr(jvm,TOTAL_GC_TIME);
+			long total_nursery_size =(long)getConn().getNumberAttr(jvm,TOTAL_NURSERY_SIZE);
+			long heap_max_size      =(long)getConn().getNumberAttr(jvm,HEAP_SIZE_MAX);
+
+			line.append( ((double)Math.round(jvm_proc_load * 100 * 100) / 100.0) + SEPARATOR);
+			line.append( total_gc_count + SEPARATOR);
+			line.append( total_gc_time + SEPARATOR);
+			line.append( ( total_nursery_size / BYTES_IN_MEGABYTE) + SEPARATOR);
+			line.append( ( heap_max_size / BYTES_IN_MEGABYTE) + SEPARATOR);
+
+		} else {
+				for (String attr : JROCKIT_MBEAN_MONITOR_ATTR_LIST) line.append(0 + SEPARATOR);
+		}
+
+
+
 		// Thread Pool Attributes
-		ObjectName threadPool = getConn().getChild(getServerRuntime(), THREAD_POOL_RUNTIME);
+		ObjectName threadPool = getConn().getChild(serverRuntime, THREAD_POOL_RUNTIME);
 		
 		for (String attr : THREADPOOL_MBEAN_MONITOR_ATTR_LIST) {
 			// If thread pool does not exist (Use81StyleExecuteQueues) can only put Zero into CSV as result
@@ -104,7 +130,7 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 		}
 		
 		// Transaction attributes
-		ObjectName txMgr = getConn().getChild(getServerRuntime(), JTA_RUNTIME);
+		ObjectName txMgr = getConn().getChild(serverRuntime, JTA_RUNTIME);
 		
 		for (String attr : JTA_MBEAN_MONITOR_ATTR_LIST) {
 			line.append(getConn().getNumberAttr(txMgr, attr) + SEPARATOR);

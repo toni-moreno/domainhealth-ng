@@ -73,36 +73,32 @@ public abstract class StatisticCapturer {
 	 * @throws DataRetrievalException Indicates problem occurred in trying to obtain and persist the server's statistics
 	 */
 	public final void captureAndLogServerStats() throws DataRetrievalException, IOException {
+		try {
 		AppLog.getLogger().debug(getClass() + " initiated to collect stats for server:" + serverName);
 		for (String type : metricTypeSet) {
- 		   if(type.equals("core")){
+ 		   if(type.equalsIgnoreCase("core")){
 			logCoreStats();
-    		   } else if (type.equals("datasource")) {
+    		   } else if (type.equalsIgnoreCase("datasource")) {
 			logDataSourcesStats();	
-		   } else if (type.equals("jmsdestination")) {
+		   } else if (type.equalsIgnoreCase("jmsdestination")) {
 			logDestinationsStats();
-		   } else if (type.equals("webapp")) {
+		   } else if (type.equalsIgnoreCase("webapp")) {
 			logWebAppStats();
-		   } else if (type.equals("ejb")) {
+		   } else if (type.equalsIgnoreCase("ejb")) {
 			logEJBStats();
-		   } else if(type.equals("hostmachine")) {
+		   } else if(type.equalsIgnoreCase("hostmachine")) {
 			logHostMachineStats();
-		   } else if(type.equals("extended")) {
+		   } else if(type.equalsIgnoreCase("extended")) {
 			logExtendedStats();
 		   }
 			
 		}
-		//logCoreStats();
-		//logDataSourcesStats();
-		//logDestinationsStats();
-		//logWebAppStats();
-		//logEJBStats();
-		//logHostMachineStats();
-		//logExtendedStats();
+		} catch ( DataRetrievalException  e) { } 
 	}
 
 	public final void setHost(String hostName)  {
-		AppLog.getLogger().info(getClass() + " initiated to collect stats for machine server:" + hostName);
+		if( (hostName == null) || (hostName.length()==0))  AppLog.getLogger().info(getClass() + " initiated to collect stats for machine server: <HOSTNAME_NOT_SET_IN_CONFIG>");
+		else AppLog.getLogger().info(getClass() + " initiated to collect stats for machine server:" + hostName);
 		this.hostName=hostName;
 	}
 
@@ -180,6 +176,11 @@ public abstract class StatisticCapturer {
 		headerLine.append(HEAP_FREE_CURRENT + SEPARATOR); 
 		headerLine.append(HEAP_USED_CURRENT + SEPARATOR); 
 		headerLine.append(HEAP_FREE_PERCENT + SEPARATOR);
+		
+                for (String attr : JROCKIT_MBEAN_MONITOR_ATTR_LIST) {
+                        headerLine.append(attr + SEPARATOR);
+                }
+		
 		
 		for (String attr : THREADPOOL_MBEAN_MONITOR_ATTR_LIST) {
 			headerLine.append(attr + SEPARATOR);

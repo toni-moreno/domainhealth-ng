@@ -308,7 +308,8 @@ public class HarvesterWLDFModuleCreator {
 		conn.setNumberAttr(harvester, SAMPLE_PERIOD, queryIntervalMillis);
 		addMetric(conn, harvester, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, SERVER_RUNTIME), SERVER_MBEAN_MONITOR_ATTR_LIST, true);
 		addMetric(conn, harvester, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, JVM_RUNTIME), JVM_MBEAN_MONITOR_ATTR_LIST, true);		
-		addMetric(conn, harvester, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, JROCKIT_RUNTIME), JVM_MBEAN_MONITOR_ATTR_LIST, true);		
+		//addMetric(conn, harvester, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, JROCKIT_RUNTIME), JVM_MBEAN_MONITOR_ATTR_LIST, true);		
+		addMetric(conn, harvester, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, JROCKIT_RUNTIME), JROCKIT_FULL_MBEAN_MONITOR_ATTR_LIST, true);		
 		addMetric(conn, harvester, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, THREAD_POOL_RUNTIME), THREADPOOL_MBEAN_MONITOR_ATTR_LIST, true);
 		/* Example of restricting mbean type query to a fixed set of known mbean instance names
 		addMetric(conn, harvester, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, WORK_MANAGER_RUNTIME), 
@@ -449,9 +450,9 @@ public class HarvesterWLDFModuleCreator {
 	
 	// Constants
 	private static final String WLS_MIN_VERSION_FOR_MULTI_WLDF_MODULES = "12.1.2";
-	private final static String HARVESTER_MODULE_NAME = "DomainHealth_WLDFHarvesterModule";
-	private final static String RETIRE_POLICY_NAME_TEMPLATE = "DomainHealth_WLDFRetirePolicy_%s";
-	private final static String MODULE_DESC_TMPLT = "WLDF Module for the 'DomainHealth' monitoring application. Harvests important Core, JDBC. JMS, WebApp, EJB, Work Manager and Server Channel statistics for each server in the domain, ready to be queried by the DomainHealth web application running on the domain's Admin Server. v%s.";
+	private final static String HARVESTER_MODULE_NAME = "DomainHealth_NG_WLDFHarvesterModule";
+	private final static String RETIRE_POLICY_NAME_TEMPLATE = "DomainHealth_NG_WLDFRetirePolicy_%s";
+	private final static String MODULE_DESC_TMPLT = "WLDF Module for the 'DomainHealth NG' monitoring application. Harvests important Core, JDBC. JMS, WebApp, EJB, Work Manager and Server Channel statistics for each server in the domain, ready to be queried by the DomainHealth web application running on the domain's Admin Server. v%s.";
 	private final static Pattern MODULE_VERSION_EXTRACTOR_PATTERN = Pattern.compile(".*\\. v(\\d+\\.\\d+\\.?\\d*[a-zA-Z]*\\d*)\\.$");
 	private final static String HAVESTER_ARCHIVE_NAME = "HarvestedDataArchive";
 	private final static int OLD_DATA_AGE_HOURS = 1;

@@ -274,7 +274,10 @@ public class RetrieverBackgroundService {
 			for (int i = 0; i < length; i++) {
 				final String serverName = conn.getTextAttr(serverRuntimes[i], NAME);
 				final String serverHost = conn.getTextAttr(serverRuntimes[i],"CurrentMachine");
-				AppLog.getLogger().info("SERVER :"+serverName+" OVER MACHINE: "+serverHost);
+				if(( serverHost==null ) || ( serverHost.length() == 0 )) 
+					AppLog.getLogger().info("SERVER :"+serverName+" OVER MACHINE: "+serverHost);
+				else 
+					AppLog.getLogger().info("SERVER :"+serverName+" OVER MACHINE: <NOT SET IN CONFIG>");
 
 				final StatisticCapturer capturer = getStatisticCapturer(conn, serverRuntimes[i], serverName);
 				capturer.setHost(serverHost);
@@ -296,8 +299,7 @@ public class RetrieverBackgroundService {
 							else capturer.captureAndLogServerStats();
 
 						} catch (Exception e) {
-							AppLog.getLogger().error(e.toString());
-							e.printStackTrace();
+							AppLog.getLogger().error(e.toString(),e);
 							AppLog.getLogger().error("Statistics Retriever Background Service - unable to retrieve statistics for specific server '" + serverName + "' for this iteration");
 						}						
 					}					

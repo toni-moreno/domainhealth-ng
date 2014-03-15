@@ -39,6 +39,7 @@ import domainhealth.core.jmx.WebLogicMBeanConnection;
 import domainhealth.core.jmx.WebLogicMBeanException;
 import domainhealth.core.statistics.StatisticsStorage;
 import domainhealth.core.statistics.ResourceNameNormaliser;
+import domainhealth.core.env.AppLog;
 
 /**
  * Enables a specific WebLogic server's Core, JDBC and JMS related statistics 
@@ -99,19 +100,45 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 		
 			// JVM attributes (got to do these separately because changing some figures to MegaBytes and calculate heap size current)
 			TypeDataRecord jvmTypeRecord = dataRecords.getTypeDataRecord(String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, JVM_RUNTIME));
+
+			boolean useJRockit=false;
 			
 			// If JRockit rather than Sun Hotspot VM, the WLDF retrieved MBean type is different
 			if (jvmTypeRecord == null) {
 				jvmTypeRecord = dataRecords.getTypeDataRecord(String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, JROCKIT_RUNTIME));
+				useJRockit=true;
+				AppLog.getLogger().info("USING JRockit Runtime instead of JVMRuntime");
 			}
 			
 			String jvmObjectName = jvmTypeRecord.getInstanceNames().next();
 			InstanceDataRecord jvmObjectRecord = jvmTypeRecord.getInstanceDataRecord(jvmObjectName);
-			line.append((long)(Long.parseLong(jvmObjectRecord.getAttrValue(HEAP_SIZE_CURRENT)) / BYTES_IN_MEGABYTE) + SEPARATOR);
-			line.append((long)(Long.parseLong(jvmObjectRecord.getAttrValue(HEAP_FREE_CURRENT)) / BYTES_IN_MEGABYTE) + SEPARATOR);
-			line.append((long)((Long.parseLong(jvmObjectRecord.getAttrValue(HEAP_SIZE_CURRENT)) - Long.parseLong(jvmObjectRecord.getAttrValue(HEAP_FREE_CURRENT))) / BYTES_IN_MEGABYTE) + SEPARATOR);
-			line.append(jvmObjectRecord.getAttrValue(HEAP_FREE_PERCENT) + SEPARATOR);
+
+			long heap_size_current = Long.parseLong(jvmObjectRecord.getAttrValue(HEAP_SIZE_CURRENT));
+			long heap_free_current = Long.parseLong(jvmObjectRecord.getAttrValue(HEAP_FREE_CURRENT));
 	
+			line.append( (heap_size_current / BYTES_IN_MEGABYTE) + SEPARATOR);
+			line.append( (heap_free_current / BYTES_IN_MEGABYTE) + SEPARATOR);
+			line.append( (( heap_size_current - heap_free_current ) / BYTES_IN_MEGABYTE) + SEPARATOR);
+			line.append( jvmObjectRecord.getAttrValue(HEAP_FREE_PERCENT) + SEPARATOR);
+		
+			if(useJRockit) {
+				double jvm_proc_load	=Double.parseDouble(jvmObjectRecord.getAttrValue(JVM_PROCESSOR_LOAD));
+				String total_gc_count	=jvmObjectRecord.getAttrValue(TOTAL_GC_COUNT);
+				String total_gc_time	=jvmObjectRecord.getAttrValue(TOTAL_GC_TIME);
+				long total_nursery_size	=Long.parseLong(jvmObjectRecord.getAttrValue(TOTAL_NURSERY_SIZE));
+				long heap_max_size	=Long.parseLong(jvmObjectRecord.getAttrValue(HEAP_SIZE_MAX));
+	
+				line.append( ((double)Math.round(jvm_proc_load * 100 * 100) / 100.0) + SEPARATOR);
+				line.append( total_gc_count + SEPARATOR);
+				line.append( total_gc_time + SEPARATOR);
+				line.append( ( total_nursery_size / BYTES_IN_MEGABYTE) + SEPARATOR);
+				line.append( ( heap_max_size / BYTES_IN_MEGABYTE) + SEPARATOR);
+				
+			} else {
+				for (String attr : JROCKIT_MBEAN_MONITOR_ATTR_LIST) line.append(0 + SEPARATOR);
+			
+			}
+				
 			// Thread Pool attributes - thread pool may not exist if Use81StyleExecuteQueues is enabled
 			InstanceDataRecord threadPoolObjectRecord = null;
 			TypeDataRecord threadPoolTypeRecord = dataRecords.getTypeDataRecord(String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, THREAD_POOL_RUNTIME));
@@ -400,6 +427,7 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 		appendWLDFQueryPart(coreStatsQueryBuilder, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, SERVER_RUNTIME), SERVER_MBEAN_MONITOR_ATTR_LIST);
 		appendWLDFQueryPart(coreStatsQueryBuilder, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, JVM_RUNTIME), JVM_MBEAN_MONITOR_ATTR_LIST);
 		appendWLDFQueryPart(coreStatsQueryBuilder, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, JROCKIT_RUNTIME), JVM_MBEAN_MONITOR_ATTR_LIST);
+		appendWLDFQueryPart(coreStatsQueryBuilder, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, JROCKIT_RUNTIME), JROCKIT_MBEAN_MONITOR_ATTR_LIST);
 		appendWLDFQueryPart(coreStatsQueryBuilder, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, THREAD_POOL_RUNTIME), THREADPOOL_MBEAN_MONITOR_ATTR_LIST);
 		// Example of a query for a restricted set of MBean instances
 		//appendWLDFQueryPartWithQueryTemplate(DEF_WKMGR_WLDF_QUERY_PART_TEMPLATE, coreStatsQueryBuilder, WORK_MANAGER_RUNTIME, WKMGR_MBEAN_MONITOR_ATTR_LIST);

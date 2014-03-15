@@ -27,6 +27,23 @@ import static domainhealth.core.jmx.WebLogicMBeanPropConstants.*;
  * listing all the attributes that should be monitored.
  */
 public class MonitorProperties {
+
+	/**
+	 * Set the deep   for a property in the list
+	 * 
+	 * @param mode The metric set mode
+	 * @return The property key
+	 */
+	public static String[] ArrayConcat(String[] a,String[] b) {
+   		int aLen = a.length;
+   		int bLen = b.length;
+  		String[] c= new String[aLen+bLen];
+		System.arraycopy(a, 0, c, 0, aLen);
+		System.arraycopy(b, 0, c, aLen, bLen);
+		return c;
+	}
+	
+
 	/**
 	 * Set the deep   for a property in the list
 	 * 
@@ -37,6 +54,7 @@ public class MonitorProperties {
 		//core
 		String[] server_list=null;
 		String[] jvm_list=null;
+		String[] jrockit_list=null;
 		String[] threadpool_list=null;
 		String[] jta_list=null;
 		//datasource
@@ -60,6 +78,7 @@ public class MonitorProperties {
 			//core
 			server_list 	= new String[] {SERVER_STATE,OPEN_SOCKETS};
 			jvm_list	= new String[] {HEAP_SIZE_CURRENT, HEAP_FREE_CURRENT, HEAP_FREE_PERCENT}; //can not change this !!
+			jrockit_list	= new String[] {JVM_PROCESSOR_LOAD,TOTAL_GC_COUNT,TOTAL_GC_TIME,TOTAL_NURSERY_SIZE,HEAP_SIZE_MAX};
 			threadpool_list = new String[] {EXECUTE_THREAD_TOTAL_COUNT,HOGGING_THREAD_COUNT,EXECUTE_THREAD_IDLE_COUNT,STANDBY_THREAD_COUNT,THROUGHPUT};
 			jta_list	= new String[] {TRANSACTION_TOTAL_COUNT, TRANSACTION_ROLLEDBACK_COUNT};
 			//jdbc
@@ -82,6 +101,7 @@ public class MonitorProperties {
 			//core
 			server_list 	= new String[] {SERVER_STATE, OPEN_SOCKETS};
 			jvm_list	= new String[] {HEAP_SIZE_CURRENT, HEAP_FREE_CURRENT, HEAP_FREE_PERCENT};
+			jrockit_list    = new String[] {JVM_PROCESSOR_LOAD,TOTAL_GC_COUNT,TOTAL_GC_TIME,TOTAL_NURSERY_SIZE,HEAP_SIZE_MAX};	
 			threadpool_list	= new String[] {EXECUTE_THREAD_TOTAL_COUNT, HOGGING_THREAD_COUNT, PENDING_USER_REQUEST_COUNT, THREAD_POOL_QUEUE_LENGTH, COMPLETED_REQUEST_COUNT, EXECUTE_THREAD_IDLE_COUNT, MIN_THREADS_CONSTRAINT_COMPLETED, MIN_THREADS_CONSTRAINT_PENDING, STANDBY_THREAD_COUNT, THROUGHPUT};
 			jta_list	= new String[] {TRANSACTION_TOTAL_COUNT, TRANSACTION_COMMITTED_COUNT, TRANSACTION_ROLLEDBACK_COUNT, TRANSACTION_HEURISTICS_TOTAL_COUNT, TRANSACTION_ABANDONED_TOTAL_COUNT, TRANSACTIONS_ACTIVE_TOTAL_COUNT};
 			//jdbc
@@ -105,8 +125,11 @@ public class MonitorProperties {
 		//core list
 		SERVER_MBEAN_MONITOR_ATTR_LIST		=server_list;
 		JVM_MBEAN_MONITOR_ATTR_LIST		=jvm_list; //can not be changed beacause of hardcoded parameters over 
+		JROCKIT_MBEAN_MONITOR_ATTR_LIST		=jrockit_list;
 		THREADPOOL_MBEAN_MONITOR_ATTR_LIST	=threadpool_list;
 		JTA_MBEAN_MONITOR_ATTR_LIST		=jta_list;
+		//needed for harvester
+		JROCKIT_FULL_MBEAN_MONITOR_ATTR_LIST	= ArrayConcat(jvm_list,jrockit_list);
 		//jdbc
 		JDBC_MBEAN_MONITOR_ATTR_LIST		=jdbc_list;
 		//jms
@@ -117,9 +140,7 @@ public class MonitorProperties {
 		EJB_POOL_MBEAN_MONITOR_ATTR_LIST	=ejbpool_list;
 		EJB_TRANSACTION_MBEAN_MONITOR_ATTR_LIST =ejbtrans_list;
 
-		EJB_MBEAN_MONITOR_ATTR_LIST 		= new String[EJB_POOL_MBEAN_MONITOR_ATTR_LIST.length + EJB_TRANSACTION_MBEAN_MONITOR_ATTR_LIST.length];	
-		System.arraycopy(EJB_POOL_MBEAN_MONITOR_ATTR_LIST, 0, EJB_MBEAN_MONITOR_ATTR_LIST, 0, EJB_POOL_MBEAN_MONITOR_ATTR_LIST.length);
-		System.arraycopy(EJB_TRANSACTION_MBEAN_MONITOR_ATTR_LIST, 0, EJB_MBEAN_MONITOR_ATTR_LIST, EJB_POOL_MBEAN_MONITOR_ATTR_LIST.length, EJB_TRANSACTION_MBEAN_MONITOR_ATTR_LIST.length);
+		EJB_MBEAN_MONITOR_ATTR_LIST 		= ArrayConcat(ejbpool_list,ejbtrans_list);	
 		//wkmgr
 		WKMGR_MBEAN_MONITOR_ATTR_LIST 		=wkmgr_list;
 		//srvchannel
@@ -258,6 +279,16 @@ public class MonitorProperties {
 	public static String[] JVM_MBEAN_MONITOR_ATTR_LIST;
 
 	/**
+	 * List of JRockit MBean Attributes to be monitored
+	 */
+	public static String[] JROCKIT_MBEAN_MONITOR_ATTR_LIST;
+
+	/**
+	 * List of FULL( combined previous both) JRockit MBean Attributes to be monitored
+	 */
+	public static String[] JROCKIT_FULL_MBEAN_MONITOR_ATTR_LIST;
+
+	/**
 	 * List of Thread Pool MBean Attributes to be monitored
 	 */
 	public static String[] THREADPOOL_MBEAN_MONITOR_ATTR_LIST;
@@ -393,6 +424,13 @@ public class MonitorProperties {
 		propList.put(HEAP_FREE_CURRENT, new WLProperty(HEAP_FREE_CURRENT, "Heap Free", MEGABYTES_UNITS)); 
 		propList.put(HEAP_USED_CURRENT, new WLProperty(HEAP_USED_CURRENT, "Heap Used", MEGABYTES_UNITS)); 
 		propList.put(HEAP_FREE_PERCENT, new WLProperty(HEAP_FREE_PERCENT, "Heap Free", PERCENT_UNITS)); 
+		//>>new in 1.1.7 version
+		propList.put(JVM_PROCESSOR_LOAD, new WLProperty(JVM_PROCESSOR_LOAD, "jvm proc load", PERCENT_UNITS));
+		propList.put(TOTAL_GC_COUNT, new WLProperty(TOTAL_GC_COUNT, "GC count", NUMBER_UNITS));
+		propList.put(TOTAL_GC_TIME, new WLProperty(TOTAL_GC_TIME, "GC time", MILLISECONDS_UNITS));
+		propList.put(TOTAL_NURSERY_SIZE, new WLProperty(TOTAL_NURSERY_SIZE, "Heap Free", MEGABYTES_UNITS));
+		propList.put(HEAP_SIZE_MAX, new WLProperty(HEAP_SIZE_MAX, "Heap Max", MEGABYTES_UNITS));
+		//<<
 		propList.put(EXECUTE_THREAD_TOTAL_COUNT, new WLProperty(EXECUTE_THREAD_TOTAL_COUNT, "Thread Pool Execute Threads", NUMBER_UNITS)); 
 		propList.put(HOGGING_THREAD_COUNT, new WLProperty(HOGGING_THREAD_COUNT, "Thread Pool Hogging Threads", NUMBER_UNITS)); 
 		propList.put(PENDING_USER_REQUEST_COUNT, new WLProperty(PENDING_USER_REQUEST_COUNT, "Thread Pool Pending User Requests", NUMBER_UNITS)); 
