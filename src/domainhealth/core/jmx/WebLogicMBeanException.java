@@ -14,6 +14,8 @@
 //POSSIBILITY OF SUCH DAMAGE.
 package domainhealth.core.jmx;
 
+import domainhealth.core.env.AppLog;
+
 /**
  * Encapsulates a problem when connecting to a WebLogic JMX MBean server
  */
@@ -25,7 +27,9 @@ public class WebLogicMBeanException extends Exception {
 	 * @param cause The root cause
 	 */
 	public WebLogicMBeanException(String message, Throwable cause) {
-		super(message, cause);
+		super();
+		//super(message, cause);
+		AppLog.getLogger().error(message,cause);
 	}
 	
 	/**
@@ -34,7 +38,9 @@ public class WebLogicMBeanException extends Exception {
 	 * @param message The exception message
 	 */
 	public WebLogicMBeanException(String message) {
-		super(message);
+		super();
+		//super(message);
+		AppLog.getLogger().error(message);
 	}
 
 	/**
@@ -43,7 +49,9 @@ public class WebLogicMBeanException extends Exception {
 	 * @param cause The root cause
 	 */
 	public WebLogicMBeanException(Throwable cause) {
-		super(cause);
+		super();
+		//super(cause);
+		AppLog.getLogger().error("UNKNOWN ERROR",cause);
 	}
 	
 	// Constants

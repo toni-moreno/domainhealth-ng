@@ -14,6 +14,8 @@
 //POSSIBILITY OF SUCH DAMAGE.
 package domainhealth.backend.retriever;
 
+import domainhealth.core.env.AppLog;
+
 /**
  * Encapsulates a problem when collecting server statistics and writing them 
  * to a CSV file
@@ -26,7 +28,9 @@ public class DataRetrievalException extends Exception {
 	 * @param cause The root cause
 	 */
 	public DataRetrievalException(String message, Throwable cause) {
-		super(message, cause);
+	//	super(message, cause);
+		super();
+		AppLog.getLogger().error(message,cause);
 	}
 	
 	/**
@@ -35,7 +39,9 @@ public class DataRetrievalException extends Exception {
 	 * @param message The exception message
 	 */
 	public DataRetrievalException(String message) {
-		super(message);
+		super();
+		//super(message);
+		AppLog.getLogger().error(message);
 	}
 
 	/**
@@ -44,7 +50,9 @@ public class DataRetrievalException extends Exception {
 	 * @param cause The root cause
 	 */
 	public DataRetrievalException(Throwable cause) {
-		super(cause);
+		super();
+		//super(cause);
+		AppLog.getLogger().error("UNKNOWN ERROR",cause);
 	}
 	
 	// Constants
