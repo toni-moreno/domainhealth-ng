@@ -16,6 +16,7 @@ package domainhealth.core.jmx;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.management.Attribute;
 import javax.management.MBeanServer;
@@ -405,6 +406,24 @@ public class WebLogicMBeanConnection {
 	}
 
 	/**
+	 * QueryNames named operation on a given MBean instance.
+	 * 
+	 * @param mBean The MBean to invoke the operation on
+	 * @param operationName The name of the operation to invoke
+	 * @param params The parameters to pass to the operation
+	 * @param signature The signature of the parameters
+	 * @return The result returned by the mbean operation
+	 * @throws WebLogicMBeanException Indicates that a JMX connection error occurred
+	 */
+	public Set<ObjectName> queryNames(ObjectName mBean) throws WebLogicMBeanException {
+		try {
+			return conn.queryNames(mBean,null);		
+		} catch (Exception e) {
+			throw new WebLogicMBeanException(e.toString(), e);
+		}		
+	}
+
+	/**
 	 * Invokes a named operation on a given MBean instance.
 	 * 
 	 * @param mBean The MBean to invoke the operation on
@@ -421,6 +440,24 @@ public class WebLogicMBeanConnection {
 			throw new WebLogicMBeanException(e.toString(), e);
 		}		
 	}
+
+
+	/**
+	 * Invokes a named operation on a given MBean instance.
+	 * 
+	 * @param mBean The MBean to invoke the operation on
+	 * @param operationName The name of the operation to invoke
+	 * @return The result returned by the mbean operation
+	 * @throws WebLogicMBeanException Indicates that a JMX connection error occurred
+	 */
+	public Object invoke(ObjectName mBean, String operationName) throws WebLogicMBeanException {
+		try {
+			return conn.invoke(mBean, operationName, null ,null);		
+		} catch (Exception e) {
+			throw new WebLogicMBeanException(e.toString(), e);
+		}		
+	}
+
 
 	/**
 	 * See if the JMX server has a MBean with a given them and if so return 

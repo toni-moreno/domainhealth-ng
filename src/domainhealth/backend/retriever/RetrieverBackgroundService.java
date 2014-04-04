@@ -227,6 +227,7 @@ public class RetrieverBackgroundService {
 		}
 
 		wlsVersionNumber = getWLSDomainVersion();		
+		jvmVersion 	 = getJVMVersion();
 		
 		if (alwaysUseJMXPoll) {
 			useWLDFHarvester = false;				
@@ -332,9 +333,9 @@ public class RetrieverBackgroundService {
 	 */
 	private StatisticCapturer getStatisticCapturer(DomainRuntimeServiceMBeanConnection conn, ObjectName serverRuntime, String serverName) {
 		if (useWLDFHarvester) {
-			return new StatisticCapturerWLDFQuery(statisticsStorage, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, metricTypeSet,wlsVersionNumber);
+			return new StatisticCapturerWLDFQuery(statisticsStorage, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, metricTypeSet,wlsVersionNumber,jvmVersion);
 		} else {
-			return new StatisticCapturerJMXPoll(statisticsStorage, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, metricTypeSet,wlsVersionNumber);
+			return new StatisticCapturerJMXPoll(statisticsStorage, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, metricTypeSet,wlsVersionNumber,jvmVersion);
 		}
 	}
 		
@@ -368,8 +369,7 @@ public class RetrieverBackgroundService {
 			// Assume caused by "DomainVersion" attribute not existing which
 			// would indicate that this is a 9.0 or 9.1 domain version
 			// Detected a bug when AdminServer is primary initialized cd 
-			AppLog.getLogger().error(e.toString());
-			e.printStackTrace();
+			AppLog.getLogger().error(e.toString(),e);
 			dom_name = "default_domain";
 		} finally {
 			AppLog.getLogger().info("Domain NAME SET TO :" + dom_name);
@@ -395,12 +395,11 @@ public class RetrieverBackgroundService {
 			conn = new DomainRuntimeServiceMBeanConnection();
 			ObjectName domainConfig = conn.getDomainConfiguration();
 			version = conn.getTextAttr(domainConfig, DOMAIN_VERSION);
-			String dom_name= conn.getTextAttr(domainConfig, "Name");
-			 AppLog.getLogger().info("Domain NAME SET TO :" + dom_name);
 			
 		} catch (WebLogicMBeanException e) {
 			// Assume caused by "DomainVersion" attribute not existing which
 			// would indicate that this is a 9.0 or 9.1 domain version
+			AppLog.getLogger().error(e.toString(),e);
 			version = DEFAULTED_WLS_VERSION;
 		} finally {
 			if (conn != null) {
@@ -410,6 +409,44 @@ public class RetrieverBackgroundService {
 
 		return version;
 	}
+
+	/**
+	 * Determine the running JVM  version.
+	 * 
+	 * @return The version text (e.g. 10.3.5)
+	 */
+	private String getJVMVersion() {
+		String vmvendor =null;
+		String vendor =null;
+		String version = null;
+		String[] parts = {"0","0"};
+		DomainRuntimeServiceMBeanConnection conn = null;
+		/*we are assuming all Domain has the same JVM !!*/
+		
+		try {
+			conn = new DomainRuntimeServiceMBeanConnection();
+			ObjectName[] serverRuntimes = conn.getAllServerRuntimes();
+			ObjectName jvm = conn.getChild(serverRuntimes[0], JVM_RUNTIME);
+			vendor = conn.getTextAttr(jvm,"JavaVendor");
+			version = conn.getTextAttr(jvm,"JavaVersion");
+			vmvendor = conn.getTextAttr(jvm,"JavaVMVendor");
+			parts=version.split("[-.]+");
+			
+		} catch (Exception e) {
+			// Assume caused by "DomainVersion" attribute not existing which
+			// would indicate that this is a 9.0 or 9.1 domain version
+			AppLog.getLogger().error(e.toString(),e);
+			version = "0";
+		} finally {
+			AppLog.getLogger().info("JVM Version set to VENDOR :" +vendor+ " VERSION: "+version+" VMVENDOR: "+vmvendor+" SUB: "+parts[0]+" SUB: "+parts [1] );
+			if (conn != null) {
+				conn.close();
+			}
+		}	
+
+		return parts[1];
+	}
+
 
 	/**
 	 * Retrieves a named work manager from the local JNDI tree. 
@@ -512,6 +549,7 @@ public class RetrieverBackgroundService {
 	private final List<String> componentBlacklist;
 	private final List<String> metricTypeSet;
 	private String wlsVersionNumber = null;
+	private String jvmVersion = null;
 	private boolean useWLDFHarvester = false;
 	private final StatisticsStorage statisticsStorage;
 	private final WorkManager captureThreadsWkMgr;

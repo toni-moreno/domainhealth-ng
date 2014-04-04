@@ -14,6 +14,7 @@
 //POSSIBILITY OF SUCH DAMAGE.
 package domainhealth.backend.wldfcapture;
 
+import static domainhealth.core.jmx.JavaMBeanPropConstants.*;
 import static domainhealth.core.jmx.WebLogicMBeanPropConstants.*;
 import static domainhealth.core.statistics.StatisticsStorage.*;
 import static domainhealth.core.statistics.MonitorProperties.*;
@@ -29,6 +30,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import javax.management.ObjectName;
+
 
 import domainhealth.backend.retriever.DataRetrievalException;
 import domainhealth.backend.retriever.StatisticCapturer;
@@ -58,8 +60,8 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 	 * @param componentBlacklist Names of web-apps/ejbs than should not haves results collected/shown
 	 * @param wlsVersionNumber The version of the host WebLogic Domain
 	 */
-	public StatisticCapturerWLDFQuery(StatisticsStorage csvStats, WebLogicMBeanConnection conn, ObjectName serverRuntime, String serverName, int queryIntervalMillis, List<String> componentBlacklist, List<String> metricTypeSet, String wlsVersionNumber) {
-		super(csvStats, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, metricTypeSet,wlsVersionNumber);
+	public StatisticCapturerWLDFQuery(StatisticsStorage csvStats, WebLogicMBeanConnection conn, ObjectName serverRuntime, String serverName, int queryIntervalMillis, List<String> componentBlacklist, List<String> metricTypeSet, String wlsVersionNumber,String jvmVersion) {
+		super(csvStats, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, metricTypeSet,wlsVersionNumber,jvmVersion);
 	}
 
 	/**
@@ -405,7 +407,7 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 	}
 
 	// Constants
-	private static final int DEFAULT_CONTENT_LINE_LEN = 100;	
+//	private static final int DEFAULT_CONTENT_LINE_LEN = 100;	
 	private final static String WLDF_QUERY_OR = " OR ";
 	private final static String WLDF_QUERY_PART_TEMPLATE = "(TYPE='%s' AND ATTRNAME='%s')";
 	// Example of query restricting on specific mbean instances

@@ -50,9 +50,10 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 	 * @param componentBlacklist Names of web-apps/ejbs than should not haves results collected/shown
 	 * @param wlsVersionNumber The version of the host WebLogic Domain
 	 */
-	public StatisticCapturerJMXPoll(StatisticsStorage csvStats, WebLogicMBeanConnection conn, ObjectName serverRuntime, String serverName, int queryIntervalMillis, List<String> componentBlacklist, List<String> metricTypeSet, String wlsVersionNumber) {
-		super(csvStats, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, metricTypeSet,wlsVersionNumber);
+	public StatisticCapturerJMXPoll(StatisticsStorage csvStats, WebLogicMBeanConnection conn, ObjectName serverRuntime, String serverName, int queryIntervalMillis, List<String> componentBlacklist, List<String> metricTypeSet, String wlsVersionNumber,String jvmVersion) {
+		super(csvStats, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, metricTypeSet,wlsVersionNumber,jvmVersion);
 	}
+
 
 	/**
 	 * Implements the abstract method to log core server stats to a CSV file.
@@ -378,5 +379,5 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 	}
 
 	// Constants
-	private static final int DEFAULT_CONTENT_LINE_LEN = 100;
+//	private static final int DEFAULT_CONTENT_LINE_LEN = 100;
 }

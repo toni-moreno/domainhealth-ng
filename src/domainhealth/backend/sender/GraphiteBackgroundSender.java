@@ -311,7 +311,9 @@ public class GraphiteBackgroundSender {
 		int counter=counterMap.get(resourceName).intValue()+2;
 
 		String metric_path_base=getMetricPathBase("","dh_stats",resourceType,resourceName);	
-		String metric_path_1=metric_path_base+"."+metricName.replace('.','_');
+		//String metric_path_1=metric_path_base+"."+metricName.replace('.','_');
+		//Metric Name is set by us if needed we can place "." to organize tree
+		String metric_path_1=metric_path_base+"."+metricName;
 		String metric_path_2=metric_path_base+".number_metrics";
 		long timestamp=System.currentTimeMillis()/1000;
 		channel.write(metric_path_1+" "+data+" "+timestamp+"\n");
@@ -359,7 +361,9 @@ public class GraphiteBackgroundSender {
 					counterInc(serverName);
 				} 
 				for(int i=2;i< size; i++) {
-					metric_path=metric_path_base+"."+metricItems.get(i).replace('.','_');
+                			//Metric Name is set by us if needed we can place "." to organize graphite tree, so we prefer not to replace dots.
+					//metric_path=metric_path_base+"."+metricItems.get(i).replace('.','_');
+					metric_path=metric_path_base+"."+metricItems.get(i);
 					value=contentItems.get(i);
 					channel.write(metric_path+" "+value+" "+timestamp+"\n");
 				}
@@ -368,21 +372,19 @@ public class GraphiteBackgroundSender {
 			}  else {
 			// other Resource Type
 				for(int i=1;i< size; i++) {
-					metric_path=metric_path_base+"."+metricItems.get(i).replace('.','_');
+					//Metric Name is set by us if needed we can place "." to organize graphite tree, so we prefer not to replace dots.
+					//metric_path=metric_path_base+"."+metricItems.get(i).replace('.','_');
+					metric_path=metric_path_base+"."+metricItems.get(i);
 					value=contentItems.get(i);
 					channel.write(metric_path+" "+value+" "+timestamp+"\n");
 				}
 				counterAdd(serverName,size-1); // not counting DateTime column
 			}
 		} catch (Exception e) {
-                        AppLog.getLogger().critical("error on parse date: " + e.toString());
-			e.printStackTrace();
+                        AppLog.getLogger().error("error on parse date: " + e.toString(),e);
 		}
 	} catch (Exception e) {
-	        AppLog.getLogger().critical("error on channel retrieval: " + e.toString());
-		e.printStackTrace();
-
-
+	        AppLog.getLogger().error("error on channel retrieval: " + e.toString(),e);
 	}
 	
 	}

@@ -22,9 +22,18 @@ import java.util.List;
 
 import javax.management.ObjectName;
 
+import javax.management.openmbean.CompositeData;
+import java.lang.management.MemoryUsage;
+
+import java.util.Set;
+import java.util.Iterator;
+
+
 import domainhealth.core.env.AppLog;
 import domainhealth.core.jmx.WebLogicMBeanConnection;
 import domainhealth.core.jmx.WebLogicMBeanException;
+
+import static domainhealth.core.jmx.JavaMBeanPropConstants.*;
 import static domainhealth.core.jmx.WebLogicMBeanPropConstants.*;
 import static domainhealth.core.statistics.StatisticsStorage.*;
 import static domainhealth.core.statistics.MonitorProperties.*;
@@ -54,7 +63,7 @@ public abstract class StatisticCapturer {
 	 * @param metricTypeSet metric types to collect
 	 * @param wlsVersionNumber The version of the host WebLogic Domain
 	 */
-	public StatisticCapturer(StatisticsStorage csvStats, WebLogicMBeanConnection conn, ObjectName serverRuntime, String serverName, int queryIntervalMillis, List<String> componentBlacklist, List<String> metricTypeSet,String wlsVersionNumber) {
+	public StatisticCapturer(StatisticsStorage csvStats, WebLogicMBeanConnection conn, ObjectName serverRuntime, String serverName, int queryIntervalMillis, List<String> componentBlacklist, List<String> metricTypeSet,String wlsVersionNumber,String jvmVersion) {
 		this.csvStats = csvStats;
 		this.conn = conn;
 		this.serverRuntime = serverRuntime;
@@ -63,6 +72,12 @@ public abstract class StatisticCapturer {
 		this.componentBlacklist = componentBlacklist;
 		this.wlsVersionNumber = wlsVersionNumber;
 		this.metricTypeSet = metricTypeSet;
+		this.jvmVersion	= jvmVersion;
+		/*TODO:check for jvm version*/
+		/*TODO array de strings con cabecceras de cada tipo preparadas.., para no construirlas cada vez, SON ESTATICAS!!*/
+		/*TODO: invoque stats in array ussing java.lang.reflect
+		http://stackoverflow.com/questions/4138527/how-to-call-a-java-method-using-a-variable-name
+		http://stackoverflow.com/questions/2882948/calling-a-method-named-string-at-runtime-in-java-and-c*/
 	}
 
 	/**
@@ -75,8 +90,12 @@ public abstract class StatisticCapturer {
 	public final void captureAndLogServerStats() throws DataRetrievalException, IOException {
 		try {
 		AppLog.getLogger().debug(getClass() + " initiated to collect stats for server:" + serverName);
+		//TODO: execute reflected methods ?
 		for (String type : metricTypeSet) {
- 		   if(type.equalsIgnoreCase("core")){
+ 		   if(type.equalsIgnoreCase("jvm")){
+			//Only for JVM 1.5 /1.6 and avobe 
+			if(Integer.parseInt(jvmVersion)>=5)	logJvmStats();
+ 		   } else if(type.equalsIgnoreCase("core")){
 			logCoreStats();
     		   } else if (type.equalsIgnoreCase("datasource")) {
 			logDataSourcesStats();	
@@ -93,7 +112,9 @@ public abstract class StatisticCapturer {
 		   }
 			
 		}
-		} catch ( DataRetrievalException  e) { } 
+		} catch ( DataRetrievalException  e) { 
+		/*this avoid exceptions on the main application server systemout.log as we want only log in our log4j logger*/
+		} 
 	}
 
 	public final void setHost(String hostName)  {
@@ -101,6 +122,262 @@ public abstract class StatisticCapturer {
 		else AppLog.getLogger().info(getClass() + " initiated to collect stats for machine server:" + hostName);
 		this.hostName=hostName;
 	}
+
+	/**
+	 * Abstract method for capturing and persisting JVM server statistics.
+	 * 
+	 * @throws DataRetrievalException Indicates problem occurred in trying to obtain and persist the server's statistics
+	 */
+//	protected abstract void logJvmStats() throws DataRetrievalException;
+//	protected abstract String getJvmStatsLine() throws WebLogicMBeanException;
+
+       protected void logJvmStats() throws DataRetrievalException {
+                try {
+                        String headerLine = getJvmStatsHeaderLine();
+                        String contentLine = getJvmStatsLine();
+                        getCSVStats().appendToResourceStatisticsCSV(new Date(), getServerName(), JVM_RESOURCE_TYPE, CORE_RSC_DEFAULT_NAME, headerLine, contentLine,getHostName()); } catch (Exception e) {
+                        throw new DataRetrievalException("Problem logging " + CORE_RESOURCE_TYPE + " resources for server " + getServerName(), e);
+                }
+        }
+
+        protected String getJvmStatsLine() throws WebLogicMBeanException {
+                StringBuilder line = new StringBuilder(DEFAULT_CONTENT_LINE_LEN);
+
+                //cl
+                long j_current_loaded_class_count=0;
+                long j_total_loaded_class_count=0;
+                long j_total_unloaded_class_count=0;
+                //comp
+                long j_total_compilation_time_class=0;
+                //gc
+                long j_old_collection_count=0;
+                long j_old_collection_time=0;
+                long j_young_collection_count=0;
+                long j_young_collection_time=0;
+                //mem (MB)
+                double j_heap_committed=0;
+                double j_heap_init=0;
+                double j_heap_max=0;
+                double j_heap_used=0;
+
+                double j_not_heap_committed=0;
+                double j_not_heap_init=0;
+                double j_not_heap_max=0;
+                double j_not_heap_used=0;
+                //memp (MB)
+                double j_mempool_cm_committed=0;
+                double j_mempool_cm_init=0;
+                double j_mempool_cm_max=0;
+                double j_mempool_cm_used=0;
+
+                double j_mempool_cb_committed=0;
+                double j_mempool_cb_init=0;
+                double j_mempool_cb_max=0;
+                double j_mempool_cb_used=0;
+
+                double j_mempool_nursery_committed=0;
+                double j_mempool_nursery_init=0;
+                double j_mempool_nursery_max=0;
+                double j_mempool_nursery_used=0;
+
+                double j_mempool_old_committed=0;
+                double j_mempool_old_init=0;
+                double j_mempool_old_max=0;
+                double j_mempool_old_used=0;
+                //thread
+                long j_cur_daemon_thread_count=0;
+                long j_cur_non_daemon_thread_count=0;
+                long j_cur_total_thread_count=0;
+                long j_total_started_thread_count=0;
+
+
+                // Date-time
+                line.append(formatSeconsdDateTime(new Date()) + SEPARATOR);
+
+                // Server attributes (not looping because state attr is not a num unlike all other attrs)
+
+                String curServer=getServerName();
+
+                try  {
+
+                        String clName = String.format("java.lang:Location=%s,type=ClassLoading", curServer);
+                        ObjectName clMBean = new ObjectName(clName);
+
+                        if(clMBean != null ) {
+                                j_current_loaded_class_count=(long)getConn().getNumberAttr(clMBean,"LoadedClassCount");
+                                j_total_loaded_class_count=(long)getConn().getNumberAttr(clMBean,"TotalLoadedClassCount");
+                                j_total_unloaded_class_count=(long) getConn().getNumberAttr(clMBean,"UnloadedClassCount");
+                                 AppLog.getLogger().debug("Class Loaded:"+j_current_loaded_class_count +" Total:"+ j_total_loaded_class_count+ " Unloaded:" +j_total_unloaded_class_count );
+
+                        }
+
+
+                        String compName = String.format("java.lang:Location=%s,type=Compilation", curServer);
+                        ObjectName compMBean = new ObjectName(compName);
+                        if(compMBean != null ) {
+                                j_total_compilation_time_class=(long)getConn().getNumberAttr(compMBean,"TotalCompilationTime");
+                                 AppLog.getLogger().debug("COMPILED TIME:"+j_total_compilation_time_class);
+                        }
+
+
+
+                        //String gcName = String.format("java.lang:Location=%s,type=GarbageCollector,name=*", curServer);
+			String gcName = String.format("java.lang:Location=%s,type=GarbageCollector,*", curServer);
+                        Set<ObjectName> gcSet = getConn().queryNames(new ObjectName(gcName));
+
+                        AppLog.getLogger().debug("Query Garbage Collector size:"+gcSet.size());
+
+                        for (ObjectName objName : gcSet ) {
+                                String name = objName.getKeyProperty("name");
+                                AppLog.getLogger().debug("GC Query NAme :"+name+ "Canonical Name: "+ objName.getCanonicalName());
+                                long cc=(long)getConn().getNumberAttr(objName,"CollectionCount"); //#collections count (-1 if undefinded)
+                                long ct=(long)getConn().getNumberAttr(objName,"CollectionTime");
+                                 AppLog.getLogger().debug("Found GC"+name+ "COUNT: "+cc+ " TIME: "+ct);
+                                if(name.matches("(?i).*Old.*")) {
+                                        j_old_collection_count=cc;
+                                        j_old_collection_time=ct;
+                                         AppLog.getLogger().debug("Found GC OLD:"+name+ "COUNT: "+cc+ " TIME: "+ct);
+
+                                } else if (name.matches("(?i).*Young.*")) {
+                                        j_young_collection_count=cc;
+                                        j_young_collection_time=ct;
+                                         AppLog.getLogger().debug("Found GC Young:"+name+ "COUNT: "+cc+ " TIME: "+ct);
+                                }
+                        }
+                        String memName = String.format("java.lang:Location=%s,type=Memory", curServer);
+                        ObjectName memMBean = new ObjectName(memName);
+                        long finalize_pending   =(long)getConn().getNumberAttr(memMBean,"ObjectPendingFinalizationCount");
+                        CompositeData heap      =(CompositeData)getConn().getObjectAttr(memMBean,"HeapMemoryUsage");
+                        CompositeData non_heap  =(CompositeData)getConn().getObjectAttr(memMBean,"NonHeapMemoryUsage");
+
+                        MemoryUsage mh  =MemoryUsage.from(heap);
+                        j_heap_committed=((double) mh.getCommitted() /BYTES_IN_MEGABYTE);
+                        j_heap_init     =((double) mh.getInit() /BYTES_IN_MEGABYTE);
+                        j_heap_max      =((double) mh.getMax() /BYTES_IN_MEGABYTE);
+                        j_heap_used     =((double) mh.getUsed() /BYTES_IN_MEGABYTE);
+                        AppLog.getLogger().debug("HEAP init:"+j_heap_init+ " max: "+j_heap_max+ " used: "+j_heap_used+ " committed: "+j_heap_committed);
+
+                        MemoryUsage mn  =MemoryUsage.from(non_heap);
+                        j_not_heap_committed	=((double)mn.getCommitted() /BYTES_IN_MEGABYTE);
+                        j_not_heap_init 	=((double)mn.getInit()/BYTES_IN_MEGABYTE);
+                        j_not_heap_max  	=((double)mn.getMax()/BYTES_IN_MEGABYTE);
+                        j_not_heap_used 	=((double)mn.getUsed()/BYTES_IN_MEGABYTE);
+                        AppLog.getLogger().debug("NON HEAP init:"+j_not_heap_init+ " max: "+j_not_heap_max+ " used: "+j_not_heap_used+ " committed: "+j_not_heap_committed);
+
+                        //String mpName = String.format("java.lang:Location=%s,type=MemoryPool,name=*", curServer);
+			String mpName = String.format("java.lang:Location=%s,type=MemoryPool,*", curServer);
+                        Set<ObjectName> mpSet = getConn().queryNames(new ObjectName(mpName));
+                        AppLog.getLogger().debug("Query Memory Pool size:"+mpSet.size());
+
+                        for (ObjectName objName : mpSet ) {
+                                String name = objName.getKeyProperty("name");
+                                AppLog.getLogger().debug("Memory Pool Name :"+name+ "Canonical Name: "+ objName.getCanonicalName());
+
+                                CompositeData usage     =(CompositeData) getConn().getObjectAttr(objName,"Usage");
+                                MemoryUsage mu  = MemoryUsage.from(usage);
+                                long usage_committed    =mu.getCommitted();
+                                long usage_init         =mu.getInit();
+                                long usage_max          =mu.getMax();
+                                long usage_used         =mu.getUsed();
+
+                                 AppLog.getLogger().debug("Found MEMPOOL:"+name+ "INIT: "+usage_init+" USED: "+usage_used+" Committed: "+ usage_committed + "MAX  "+usage_max);
+                                if(name.matches("(?i).*Class Memory.*")) {
+                                        j_mempool_cm_committed  =((double)usage_committed/BYTES_IN_MEGABYTE);
+                                        j_mempool_cm_init       =((double)usage_init/BYTES_IN_MEGABYTE);
+                                        j_mempool_cm_max        =((double)usage_max/BYTES_IN_MEGABYTE);
+                                        j_mempool_cm_used       =((double)usage_used/BYTES_IN_MEGABYTE);
+
+                                } else if (name.matches("(?i).*ClassBlock Memory.*")) {
+                                        j_mempool_cb_committed  =((double)usage_committed/BYTES_IN_MEGABYTE);
+                                        j_mempool_cb_init       =((double)usage_init/BYTES_IN_MEGABYTE);
+                                        j_mempool_cb_max        =((double)usage_max/BYTES_IN_MEGABYTE);
+                                        j_mempool_cb_used       =((double)usage_used/BYTES_IN_MEGABYTE);
+                                } else if (name.matches("(?i).*Nursery.*")) {
+                                        j_mempool_nursery_committed     =((double)usage_committed/BYTES_IN_MEGABYTE);
+                                        j_mempool_nursery_init          =((double)usage_init/BYTES_IN_MEGABYTE);
+                                        j_mempool_nursery_max           =((double)usage_max/BYTES_IN_MEGABYTE);
+                                        j_mempool_nursery_used          =((double)usage_used/BYTES_IN_MEGABYTE);
+
+                                }else if (name.matches("(?i).*Old.*")) {
+                                        j_mempool_old_committed         =((double)usage_committed/BYTES_IN_MEGABYTE);
+                                        j_mempool_old_init              =((double)usage_init/BYTES_IN_MEGABYTE);
+                                        j_mempool_old_max               =((double)usage_max/BYTES_IN_MEGABYTE);
+                                        j_mempool_old_used              =((double)usage_used/BYTES_IN_MEGABYTE);
+
+                                }
+
+                        }
+                        String thrName = String.format("java.lang:Location=%s,type=Threading", curServer);
+                        ObjectName thrMBean = new ObjectName(thrName);
+
+                        j_cur_daemon_thread_count       =(long) getConn().getNumberAttr(thrMBean,"DaemonThreadCount");
+                        j_cur_total_thread_count        =(long) getConn().getNumberAttr(thrMBean,"ThreadCount");
+                        j_cur_non_daemon_thread_count   =j_cur_total_thread_count-j_cur_daemon_thread_count;
+                        j_total_started_thread_count    =(long) getConn().getNumberAttr(thrMBean,"TotalStartedThreadCount");
+
+                         AppLog.getLogger().debug(" Thread  count: TOTAL: "+j_cur_total_thread_count+" DAEMON: "+j_cur_daemon_thread_count+ "STARTED: "+j_total_started_thread_count);
+
+
+
+
+                } catch (Exception e) {
+                         AppLog.getLogger().error(e.toString(),e);
+                }
+
+                //class loader
+                line.append(j_current_loaded_class_count + SEPARATOR); //J_CURRENT_LOADED_CLASS_COUNT
+                line.append(j_total_loaded_class_count + SEPARATOR); //J_TOTAL_LOADED_CLASS_COUNT
+                line.append(j_total_unloaded_class_count + SEPARATOR); //J_TOTAL_UNLOADED_CLASS_COUNT
+                //comp
+                line.append(j_total_compilation_time_class + SEPARATOR); //J_TOTAL_COMPILATION_TIME_CLASS
+                //GC
+                line.append(j_old_collection_count + SEPARATOR); //J_OLD_COLLECTION_COUNT
+                line.append(j_old_collection_time + SEPARATOR); //J_OLD_COLLECTION_TIME
+                line.append(j_young_collection_count + SEPARATOR); //J_YOUNG_COLLECTION_COUNT
+                line.append(j_young_collection_time + SEPARATOR); //J_YOUNG_COLLECTION_TIME
+                //Mem
+                line.append(j_heap_committed + SEPARATOR); //J_HEAP_COMMITTED
+                line.append(j_heap_init + SEPARATOR); //J_HEAP_INIT
+                line.append(j_heap_max + SEPARATOR); //J_HEAP_MAX
+                line.append(j_heap_used + SEPARATOR); //J_HEAP_USED
+
+                line.append(j_not_heap_committed + SEPARATOR); //J_NOT_HEAP_COMMITTED
+                line.append(j_not_heap_init + SEPARATOR); //J_NOT_HEAP_INIT
+                line.append(j_not_heap_max + SEPARATOR); //J_NOT_HEAP_MAX
+                line.append(j_not_heap_used + SEPARATOR); //J_NOT_HEAP_USED
+                //MemPool
+                line.append(j_mempool_cm_committed + SEPARATOR); //J_MEMPOOL_CM_COMMITTED
+                line.append(j_mempool_cm_init + SEPARATOR); //J_MEMPOOL_CM_INIT
+                line.append(j_mempool_cm_max + SEPARATOR); //J_MEMPOOL_CM_MAX
+                line.append(j_mempool_cm_used + SEPARATOR); //J_MEMPOOL_CM_USED
+
+                line.append(j_mempool_cb_committed + SEPARATOR); //J_MEMPOOL_CB_COMMITTED
+                line.append(j_mempool_cb_init + SEPARATOR); //J_MEMPOOL_CB_INIT
+                line.append(j_mempool_cb_max + SEPARATOR); //J_MEMPOOL_CB_MAX
+                line.append(j_mempool_cb_used + SEPARATOR); //J_MEMPOOL_CB_USED
+
+                line.append(j_mempool_nursery_committed + SEPARATOR); //J_MEMPOOL_NURSERY_COMMITTED
+                line.append(j_mempool_nursery_init + SEPARATOR); //J_MEMPOOL_NURSERY_INIT
+                line.append(j_mempool_nursery_max + SEPARATOR); //J_MEMPOOL_NURSERY_MAX
+                line.append(j_mempool_nursery_used + SEPARATOR); //J_MEMPOOL_NURSERY_USED
+
+                line.append(j_mempool_old_committed + SEPARATOR); //J_MEMPOOL_OLD_COMMITTED
+                line.append(j_mempool_old_init + SEPARATOR); //J_MEMPOOL_OLD_INIT
+                line.append(j_mempool_old_max + SEPARATOR); //J_MEMPOOL_OLD_MAX
+                line.append(j_mempool_old_used + SEPARATOR); //J_MEMPOOL_OLD_USED
+
+                //thread
+                line.append(j_cur_daemon_thread_count + SEPARATOR); //J_CUR_DAEMON_THREAD_COUNT
+                line.append(j_cur_non_daemon_thread_count + SEPARATOR); //J_CUR_NON_DAEMON_THREAD_COUNT
+                line.append(j_cur_total_thread_count + SEPARATOR); //J_CUR_TOTAL_THREAD_COUNT
+                line.append(j_total_started_thread_count + SEPARATOR); //J_TOTAL_STARTED_THREAD_COUNT
+
+                return line.toString();
+
+
+        }
+
+
 
 	/**
 	 * Abstract method for capturing and persisting core server statistics.
@@ -163,6 +440,50 @@ public abstract class StatisticCapturer {
 	 * 
 	 * @return The CVS field name header
 	 */
+	/*TODO: poner un string constante para cada tipo desde la creacion de la clase*/
+
+	protected String getJvmStatsHeaderLine() {
+		StringBuilder headerLine = new StringBuilder(DEFAULT_HEADER_LINE_LEN);
+		headerLine.append(DATE_TIME + SEPARATOR);	
+
+		for (String attr : J_CLASSLOADING_MBEAN_ATTR_LIST ) {
+			headerLine.append(attr + SEPARATOR);
+		}			
+
+		// Got to do these separately because adding calculated filed for heap size current
+                for (String attr : J_COMPILATION_MBEAN_ATTR_LIST) {
+                        headerLine.append(attr + SEPARATOR);
+                }
+		
+		for (String attr : J_GARBAGECOLLECTOR_MBEAN_ATTR_LIST ) {
+			headerLine.append(attr + SEPARATOR);
+		}			
+
+		for (String attr : J_MEMORY_MBEAN_ATTR_LIST) {
+			headerLine.append(attr + SEPARATOR);
+		}			
+
+		for (String attr : J_MEMORYPOOL_MBEAN_ATTR_LIST ) {
+			headerLine.append(attr + SEPARATOR);
+		}			
+
+		for (String attr : J_TREAD_MBEAN_ATTR_LIST) {
+			headerLine.append(attr + SEPARATOR);
+		}			
+
+		return headerLine.toString();
+	}
+
+
+	/**
+	 * Returns a text line containing the comma separated statistic field 
+	 * headers for core server statistics.
+	 * 
+	 * @return The CVS field name header
+	 */
+
+	/*TODO: poner un string constante para cada tipo desde la creacion de la clase*/
+
 	protected String getCoreStatsHeaderLine() {
 		StringBuilder headerLine = new StringBuilder(DEFAULT_HEADER_LINE_LEN);
 		headerLine.append(DATE_TIME + SEPARATOR);	
@@ -321,6 +642,8 @@ public abstract class StatisticCapturer {
 	}
 	
 	// Constants
+        protected static final int DEFAULT_CONTENT_LINE_LEN = 100;
+
 	private static final int DEFAULT_HEADER_LINE_LEN = 100;
 	protected static final long BYTES_IN_MEGABYTE = 1024 * 1024;
 	
@@ -334,5 +657,6 @@ public abstract class StatisticCapturer {
 	private final List<String> componentBlacklist;
 	private final List<String> metricTypeSet;
 	private final String wlsVersionNumber;
+	private final String jvmVersion;
 	private final DateFormat secondDateFormat = new SimpleDateFormat(DateUtil.DISPLAY_DATETIME_FORMAT);
 }

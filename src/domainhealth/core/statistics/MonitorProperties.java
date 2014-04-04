@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static domainhealth.core.jmx.JavaMBeanPropConstants.*;
 import static domainhealth.core.jmx.WebLogicMBeanPropConstants.*;
 
 /**
@@ -51,6 +52,13 @@ public class MonitorProperties {
 	 * @return The property key
 	 */
 	public static void setMetricDeep(String mode) {
+		//jvm
+		String[] j_cl=null; //classLoading
+		String[] j_comp=null; //compilation
+		String[] j_gc=null; //Garbage Collector
+		String[] j_mem=null; //Memory Manager
+		String[] j_memp=null; //Memory pool
+		String[] j_thread=null;
 		//core
 		String[] server_list=null;
 		String[] jvm_list=null;
@@ -75,6 +83,13 @@ public class MonitorProperties {
 
 		
 		if((mode.equalsIgnoreCase("basic") | mode.equalsIgnoreCase("extended"))) {
+			//jvm
+			j_cl		= new String[] {J_CURRENT_LOADED_CLASS_COUNT,J_TOTAL_LOADED_CLASS_COUNT,J_TOTAL_UNLOADED_CLASS_COUNT};
+			j_comp		= new String[] {J_TOTAL_COMPILATION_TIME_CLASS};
+			j_gc		= new String[] {J_OLD_COLLECTION_COUNT,J_OLD_COLLECTION_TIME,J_YOUNG_COLLECTION_COUNT,J_YOUNG_COLLECTION_TIME};
+			j_mem		= new String[] {J_HEAP_COMMITTED,J_HEAP_INIT,J_HEAP_MAX,J_HEAP_USED,J_NOT_HEAP_COMMITTED,J_NOT_HEAP_INIT,J_NOT_HEAP_MAX,J_NOT_HEAP_USED };
+			j_memp		= new String[] {J_MEMPOOL_CM_COMMITTED,J_MEMPOOL_CM_INIT,J_MEMPOOL_CM_MAX,J_MEMPOOL_CM_USED,J_MEMPOOL_CB_COMMITTED,J_MEMPOOL_CB_INIT,J_MEMPOOL_CB_MAX,J_MEMPOOL_CB_USED,J_MEMPOOL_NURSERY_COMMITTED,J_MEMPOOL_NURSERY_INIT,J_MEMPOOL_NURSERY_MAX,J_MEMPOOL_NURSERY_USED,J_MEMPOOL_OLD_COMMITTED,J_MEMPOOL_OLD_INIT,J_MEMPOOL_OLD_MAX,J_MEMPOOL_OLD_USED };
+			j_thread	= new String[] {J_CUR_DAEMON_THREAD_COUNT,J_CUR_NON_DAEMON_THREAD_COUNT,J_CUR_TOTAL_THREAD_COUNT,J_TOTAL_STARTED_THREAD_COUNT };
 			//core
 			server_list 	= new String[] {SERVER_STATE,OPEN_SOCKETS};
 			jvm_list	= new String[] {HEAP_SIZE_CURRENT, HEAP_FREE_CURRENT, HEAP_FREE_PERCENT}; //can not change this !!
@@ -98,6 +113,14 @@ public class MonitorProperties {
 			host_list	= new String[] {NETWORK_RX_ERRORS, NETWORK_RX_MEGABYTES, NETWORK_TX_MEGABYTES, NETWORK_TX_ERRORS, PHYSICAL_MEMORY_USED_PERCENT, PHYSICAL_SWAP_USED_PERCENT, PROCESSOR_LAST_MINUTE_WORKLOAD_AVERAGE, PROCESSOR_USAGE_PERCENT};
 			
 		} else  {
+			//jvm
+			j_cl		= new String[] {J_CURRENT_LOADED_CLASS_COUNT,J_TOTAL_LOADED_CLASS_COUNT,J_TOTAL_UNLOADED_CLASS_COUNT};
+			j_comp		= new String[] {J_TOTAL_COMPILATION_TIME_CLASS};
+			j_gc		= new String[] {J_OLD_COLLECTION_COUNT,J_OLD_COLLECTION_TIME,J_YOUNG_COLLECTION_COUNT,J_YOUNG_COLLECTION_TIME};
+			j_mem		= new String[] {J_HEAP_COMMITTED,J_HEAP_INIT,J_HEAP_MAX,J_HEAP_USED,J_NOT_HEAP_COMMITTED,J_NOT_HEAP_INIT,J_NOT_HEAP_MAX,J_NOT_HEAP_USED };
+			j_memp		= new String[] {J_MEMPOOL_CM_COMMITTED,J_MEMPOOL_CM_INIT,J_MEMPOOL_CM_MAX,J_MEMPOOL_CM_USED,J_MEMPOOL_CB_COMMITTED,J_MEMPOOL_CB_INIT,J_MEMPOOL_CB_MAX,J_MEMPOOL_CB_USED,J_MEMPOOL_NURSERY_COMMITTED,J_MEMPOOL_NURSERY_INIT,J_MEMPOOL_NURSERY_MAX,J_MEMPOOL_NURSERY_USED,J_MEMPOOL_OLD_COMMITTED,J_MEMPOOL_OLD_INIT,J_MEMPOOL_OLD_MAX,J_MEMPOOL_OLD_USED };
+			j_thread	= new String[] {J_CUR_DAEMON_THREAD_COUNT,J_CUR_NON_DAEMON_THREAD_COUNT,J_CUR_TOTAL_THREAD_COUNT,J_TOTAL_STARTED_THREAD_COUNT };
+
 			//core
 			server_list 	= new String[] {SERVER_STATE, OPEN_SOCKETS};
 			jvm_list	= new String[] {HEAP_SIZE_CURRENT, HEAP_FREE_CURRENT, HEAP_FREE_PERCENT};
@@ -122,6 +145,13 @@ public class MonitorProperties {
 
 		}
 		//setting list
+		J_CLASSLOADING_MBEAN_ATTR_LIST		=j_cl;
+		J_COMPILATION_MBEAN_ATTR_LIST		=j_comp;
+		J_GARBAGECOLLECTOR_MBEAN_ATTR_LIST	=j_gc;
+		J_MEMORY_MBEAN_ATTR_LIST		=j_mem;
+		J_MEMORYPOOL_MBEAN_ATTR_LIST		=j_memp;
+		J_TREAD_MBEAN_ATTR_LIST			=j_thread;
+
 		//core list
 		SERVER_MBEAN_MONITOR_ATTR_LIST		=server_list;
 		JVM_MBEAN_MONITOR_ATTR_LIST		=jvm_list; //can not be changed beacause of hardcoded parameters over 
@@ -222,7 +252,12 @@ public class MonitorProperties {
 	 * Default Name of core resource - empty string ''
 	 */
 	public final static String CORE_RSC_DEFAULT_NAME = "";
-	
+
+	/**
+	 * Name of the 'core' category of resource for core server statistics
+	 */
+	public final static String JVM_RESOURCE_TYPE = "jvm";
+
 	/**
 	 * Name of the 'core' category of resource for core server statistics
 	 */
@@ -266,7 +301,16 @@ public class MonitorProperties {
 	/**
 	 * List of names or allowable resource types (eg. core, datasource)
 	 */
-	public final static List<String> LEGAL_RESOURCE_TYPES = Arrays.asList(CORE_RESOURCE_TYPE, DATASOURCE_RESOURCE_TYPE, DESTINATION_RESOURCE_TYPE, WEBAPP_RESOURCE_TYPE, EJB_RESOURCE_TYPE, WORKMGR_RESOURCE_TYPE, SVRCHNL_RESOURCE_TYPE, HOSTMACHINE_RESOURCE_TYPE);
+	public final static List<String> LEGAL_RESOURCE_TYPES = Arrays.asList(JVM_RESOURCE_TYPE, CORE_RESOURCE_TYPE, DATASOURCE_RESOURCE_TYPE, DESTINATION_RESOURCE_TYPE, WEBAPP_RESOURCE_TYPE, EJB_RESOURCE_TYPE, WORKMGR_RESOURCE_TYPE, SVRCHNL_RESOURCE_TYPE, HOSTMACHINE_RESOURCE_TYPE);
+
+
+	public static String[]	J_CLASSLOADING_MBEAN_ATTR_LIST;
+	public static String[]	J_COMPILATION_MBEAN_ATTR_LIST;
+	public static String[]  J_GARBAGECOLLECTOR_MBEAN_ATTR_LIST;
+	public static String[]  J_MEMORY_MBEAN_ATTR_LIST;
+	public static String[]	J_MEMORYPOOL_MBEAN_ATTR_LIST;
+	public static String[]  J_TREAD_MBEAN_ATTR_LIST;
+
 
 	/**
 	 * List of Server MBean Attributes to be monitored
