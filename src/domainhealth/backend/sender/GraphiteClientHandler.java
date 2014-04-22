@@ -13,8 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package domainhealth.backend.sender;
 
+import domainhealth.core.env.AppLog;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -75,7 +77,8 @@ public class GraphiteClientHandler extends SimpleChannelUpstreamHandler {
 
     @Override
      public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
-     System.out.println("Disconnected from: " + getRemoteAddress());
+     //System.out.println("Disconnected from: " + getRemoteAddress());
+	println("Disconnected from: " + getRemoteAddress());
      }
 
   @Override
@@ -83,10 +86,12 @@ public class GraphiteClientHandler extends SimpleChannelUpstreamHandler {
       println("Sleeping for: " + this.RECONNECT_TIMEOUT + 's');
       timer.newTimeout(new TimerTask() {
           public void run(Timeout timeout) throws Exception {
-              println("Reconnecting to: " + getRemoteAddress());
-               //ChannelFuture cf=
-		bootstrap.connect();
-		//	gSender.setChannel(cf.awaitUninterruptibly().getChannel());
+		try {
+              		println("Reconnecting to: " + getRemoteAddress());
+			bootstrap.connect();
+		} catch (Exception e) {
+			AppLog.getLogger().error("Error cn trying to reconnect after Reconnect timeout expired : " + e.getMessage(),e);
+		}
           }
       }, this.RECONNECT_TIMEOUT, TimeUnit.SECONDS);
   }
@@ -112,11 +117,13 @@ public class GraphiteClientHandler extends SimpleChannelUpstreamHandler {
 	Throwable cause = e.getCause();
   	 if (cause instanceof ConnectException) {
               startTime = -1;
-              println("Failed to connect: " + cause.getMessage());
+	      AppLog.getLogger().error("Failed to connect: "+ cause.getMessage(),cause);
+              //println("Failed to connect: " + cause.getMessage());
           }
           if (cause instanceof ReadTimeoutException) {
               // The connection was OK but there was no traffic for last period.
-              println("Disconnecting due to no inbound traffic");
+	     AppLog.getLogger().error("Disconnecting due to no inbound traffic " + cause.getMessage(),cause);
+              //println("Disconnecting due to no inbound traffic");
           } else {
               cause.printStackTrace();
           }
@@ -135,9 +142,11 @@ public class GraphiteClientHandler extends SimpleChannelUpstreamHandler {
    void println(String msg) {
 	  String date=sdf.format(new Date());
           if (startTime < 0) {
-              System.err.format("%s :[SERVER IS DOWN] %s%n",date, msg);
+	      AppLog.getLogger().warning(String.format("%s :[CONNECTION IS DOWN] %s",date, msg));
+              //System.err.format("%s :[SERVER IS DOWN] %s%n",date, msg);
           } else {
-              System.err.format("%s :[UPTIME: %5ds] %s%n",date, (System.currentTimeMillis() - startTime) / 1000, msg);
+	      AppLog.getLogger().warning(String.format("%s :[UPTIME: %5ds] %s",date,(System.currentTimeMillis() - startTime) / 1000,msg));
+              //System.err.format("%s :[UPTIME: %5ds] %s%n",date, (System.currentTimeMillis() - startTime) / 1000, msg);
    }
       }
 }

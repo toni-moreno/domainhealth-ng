@@ -140,7 +140,7 @@ public class GraphiteBackgroundSender {
 		 AppLog.getLogger().info("Graphite host prefix to:"+this.metric_host_prefix);
 
 		this.metric_host_suffix=appProps.getProperty(PropKey.GRAPHITE_METRIC_HOST_SUFFIX_PROP);
-		if(this.metric_host_suffix == null ) this.metric_host_suffix="wl";
+		if(this.metric_host_suffix == null ) this.metric_host_suffix="wls";
 		AppLog.getLogger().info("Graphite host suffix to:"+this.metric_host_suffix);
 
 		this.metric_default_host=appProps.getProperty(PropKey.GRAPHITE_METRIC_DEFAULT_HOST_PROP);
@@ -320,8 +320,7 @@ public class GraphiteBackgroundSender {
 		channel.write(metric_path_2+" "+counter+" "+timestamp+"\n");
 		
 	} catch (Exception e) {
-	        AppLog.getLogger().critical("error on channel retrieval: " + e.toString());
-		e.printStackTrace();
+	        AppLog.getLogger().error("error on channel retrieval: " + e.toString(),e);
 	}
 	
 	}

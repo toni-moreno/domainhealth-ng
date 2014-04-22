@@ -19,6 +19,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.management.ObjectName;
 
@@ -39,6 +41,7 @@ import static domainhealth.core.statistics.StatisticsStorage.*;
 import static domainhealth.core.statistics.MonitorProperties.*;
 import domainhealth.core.statistics.StatisticsStorage;
 import domainhealth.core.util.DateUtil;
+import domainhealth.backend.retriever.HeaderLine;
 
 
 
@@ -73,11 +76,8 @@ public abstract class StatisticCapturer {
 		this.wlsVersionNumber = wlsVersionNumber;
 		this.metricTypeSet = metricTypeSet;
 		this.jvmVersion	= jvmVersion;
-		/*TODO:check for jvm version*/
 		/*TODO array de strings con cabecceras de cada tipo preparadas.., para no construirlas cada vez, SON ESTATICAS!!*/
-		/*TODO: invoque stats in array ussing java.lang.reflect
-		http://stackoverflow.com/questions/4138527/how-to-call-a-java-method-using-a-variable-name
-		http://stackoverflow.com/questions/2882948/calling-a-method-named-string-at-runtime-in-java-and-c*/
+
 	}
 
 	/**
@@ -197,19 +197,22 @@ public abstract class StatisticCapturer {
                 // Server attributes (not looping because state attr is not a num unlike all other attrs)
 
                 String curServer=getServerName();
+		AppLog.getLogger().info("Begin JVM data gather process for server: "+curServer);
 
                 try  {
 
                         String clName = String.format("java.lang:Location=%s,type=ClassLoading", curServer);
                         ObjectName clMBean = new ObjectName(clName);
+			AppLog.getLogger().info("ClassLoading Objectname : "+clMBean.toString());
+
 
                         if(clMBean != null ) {
                                 j_current_loaded_class_count=(long)getConn().getNumberAttr(clMBean,"LoadedClassCount");
                                 j_total_loaded_class_count=(long)getConn().getNumberAttr(clMBean,"TotalLoadedClassCount");
                                 j_total_unloaded_class_count=(long) getConn().getNumberAttr(clMBean,"UnloadedClassCount");
                                  AppLog.getLogger().debug("Class Loaded:"+j_current_loaded_class_count +" Total:"+ j_total_loaded_class_count+ " Unloaded:" +j_total_unloaded_class_count );
-
                         }
+
 
 
                         String compName = String.format("java.lang:Location=%s,type=Compilation", curServer);
@@ -321,6 +324,7 @@ public abstract class StatisticCapturer {
 
 
                 } catch (Exception e) {
+			 AppLog.getLogger().error("ERROR on get getJvmStatsLine data in server :"+curServer);
                          AppLog.getLogger().error(e.toString(),e);
                 }
 
@@ -659,4 +663,20 @@ public abstract class StatisticCapturer {
 	private final String wlsVersionNumber;
 	private final String jvmVersion;
 	private final DateFormat secondDateFormat = new SimpleDateFormat(DateUtil.DISPLAY_DATETIME_FORMAT);
+
+	public final static Map<String, HeaderLine> headerList= new HashMap<String, HeaderLine>();
+
+	static {
+		headerList.put("JVM",new HeaderLine(J_MBEAN_ALL));
+		headerList.put("CORE",new HeaderLine(J_CORE_ALL));
+		headerList.put("JDBC",new HeaderLine(JDBC_MBEAN_MONITOR_ATTR_LIST));
+		headerList.put("JMS",new HeaderLine(JMS_DESTINATION_MBEAN_MONITOR_ATTR_LIST));
+		headerList.put("WEBAPP",new HeaderLine(WEBAPP_MBEAN_MONITOR_ATTR_LIST));
+		headerList.put("EJB",new HeaderLine(EJB_MBEAN_MONITOR_ATTR_LIST));
+		headerList.put("HOST",new HeaderLine(HOST_MACHINE_STATS_MBEAN_MONITOR_ATTR_LIST));
+		headerList.put("WKMGR",new HeaderLine(WKMGR_MBEAN_MONITOR_ATTR_LIST));
+		headerList.put("SRVCHN",new HeaderLine(SVR_CHANNEL_MBEAN_MONITOR_ATTR_LIST));
+	}
 }
+
+

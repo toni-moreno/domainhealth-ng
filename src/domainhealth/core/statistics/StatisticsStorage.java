@@ -537,10 +537,10 @@ public class StatisticsStorage {
 			DateFormat secondDateFormat = new SimpleDateFormat(DISPLAY_DATETIME_FORMAT);							
 			dateTime = secondDateFormat.parse(dateTimeText.toString());
 		} catch(ParseException pe) {
-				AppLog.getLogger().error(pe.toString());
+				AppLog.getLogger().error(pe.toString(),pe);
 		} finally {
 			if (in != null) {
-				try { in.close(); } catch (Exception e) { e.printStackTrace(); }									
+				try { in.close(); } catch (Exception e) { AppLog.getLogger().error(e.toString(),e); }									
 			}
 		}
 	

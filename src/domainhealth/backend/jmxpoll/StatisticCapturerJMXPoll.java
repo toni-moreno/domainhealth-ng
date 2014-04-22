@@ -23,6 +23,7 @@ import javax.management.ObjectName;
 
 import domainhealth.backend.retriever.DataRetrievalException;
 import domainhealth.backend.retriever.StatisticCapturer;
+import domainhealth.backend.retriever.HeaderLine;
 import domainhealth.core.env.AppLog;
 import domainhealth.core.jmx.WebLogicMBeanConnection;
 import domainhealth.core.jmx.WebLogicMBeanException;
@@ -60,7 +61,10 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 	 */
 	protected void logCoreStats() throws DataRetrievalException {
 		try {
-			String headerLine = getCoreStatsHeaderLine();
+		//	String headerLine = getCoreStatsHeaderLine();
+			HeaderLine hl=headerList.get("CORE");
+			String headerLine = hl.header_string;
+
 			String contentLine = getCoreStatsLine();
 			getCSVStats().appendToResourceStatisticsCSV(new Date(), getServerName(), CORE_RESOURCE_TYPE, CORE_RSC_DEFAULT_NAME, headerLine, contentLine,getHostName());
 		} catch (Exception e) {
@@ -113,7 +117,7 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 			line.append( ( heap_max_size / BYTES_IN_MEGABYTE) + SEPARATOR);
 
 		} else {
-				for (String attr : JROCKIT_MBEAN_MONITOR_ATTR_LIST) line.append(0 + SEPARATOR);
+			for (String attr : JROCKIT_MBEAN_MONITOR_ATTR_LIST) line.append(0 + SEPARATOR);
 		}
 
 
@@ -151,7 +155,9 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 			Date nowDate = new Date();
 			String now = (new SimpleDateFormat(DATETIME_PARAM_FORMAT)).format(nowDate);
 			Properties artifactList = new Properties();
-			String headerLine = constructHeaderLine(JDBC_MBEAN_MONITOR_ATTR_LIST);
+			
+			//String headerLine = constructHeaderLine(JDBC_MBEAN_MONITOR_ATTR_LIST);
+			String headerLine=headerList.get("JDBC").getString();
 			ObjectName jdbcRuntime = getConn().getChild(getServerRuntime(), JDBC_SERVICE_RUNTIME);
 	
 			for (ObjectName ds : getConn().getChildren(jdbcRuntime, JDBC_DATA_SOURCE_RUNTIMES)) {
@@ -182,7 +188,9 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 			Date nowDate = new Date();
 			String now = (new SimpleDateFormat(DATETIME_PARAM_FORMAT)).format(nowDate);
 			Properties artifactList = new Properties();
-			String headerLine = constructHeaderLine(JMS_DESTINATION_MBEAN_MONITOR_ATTR_LIST);
+			//String headerLine = constructHeaderLine(JMS_DESTINATION_MBEAN_MONITOR_ATTR_LIST);
+			String headerLine =headerList.get("JMS").getString();
+		
 			ObjectName jmsRuntime = getConn().getChild(getServerRuntime(), JMS_RUNTIME);
 			
 			for (ObjectName jmsServer : getConn().getChildren(jmsRuntime, JMS_SERVERS)) { 
@@ -215,7 +223,8 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 			Date nowDate = new Date();
 			String now = (new SimpleDateFormat(DATETIME_PARAM_FORMAT)).format(nowDate);
 			Properties artifactList = new Properties();
-			String headerLine = constructHeaderLine(WEBAPP_MBEAN_MONITOR_ATTR_LIST);
+			//String headerLine = constructHeaderLine(WEBAPP_MBEAN_MONITOR_ATTR_LIST);
+			String headerLine = headerList.get("WEBAPP").getString();
 			ObjectName[] appRuntimes = getConn().getChildren(getServerRuntime(), APPLICATION_RUNTIMES);
 
 			for (ObjectName appRuntime : appRuntimes) {
@@ -260,7 +269,8 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 			Date nowDate = new Date();
 			String now = (new SimpleDateFormat(DATETIME_PARAM_FORMAT)).format(nowDate);
 			Properties artifactList = new Properties();
-			String headerLine = constructHeaderLine(EJB_MBEAN_MONITOR_ATTR_LIST);
+			//String headerLine = constructHeaderLine(EJB_MBEAN_MONITOR_ATTR_LIST);
+			String headerLine = headerList.get("EJB").getString();
 			ObjectName[] appRuntimes = getConn().getChildren(getServerRuntime(), APPLICATION_RUNTIMES);
 
 			for (ObjectName appRuntime : appRuntimes) {
@@ -316,7 +326,8 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 			Date nowDate = new Date();
 			String now = (new SimpleDateFormat(DATETIME_PARAM_FORMAT)).format(nowDate);
 			Properties artifactList = new Properties();
-			String headerLine = constructHeaderLine(HOST_MACHINE_STATS_MBEAN_MONITOR_ATTR_LIST);			
+			//String headerLine = constructHeaderLine(HOST_MACHINE_STATS_MBEAN_MONITOR_ATTR_LIST);			
+			String headerLine = headerList.get("HOST").getString();
 			String hostMBeanName = String.format(HOST_MACHINE_MBEAN_FULLNAME_TEMPLATE, getServerName());
 			ObjectName remoteWLHostMachineStatsMBean = getConn().getCustomMBean(hostMBeanName);
 			

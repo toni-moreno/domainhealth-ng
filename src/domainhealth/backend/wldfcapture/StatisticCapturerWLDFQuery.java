@@ -34,6 +34,7 @@ import javax.management.ObjectName;
 
 import domainhealth.backend.retriever.DataRetrievalException;
 import domainhealth.backend.retriever.StatisticCapturer;
+import domainhealth.backend.retriever.HeaderLine;
 import domainhealth.backend.wldfcapture.data.DataRecordsCollection;
 import domainhealth.backend.wldfcapture.data.InstanceDataRecord;
 import domainhealth.backend.wldfcapture.data.TypeDataRecord;
@@ -69,7 +70,8 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 	 */
 	protected void logCoreStats() throws DataRetrievalException {
 		try {
-			String headerLine = getCoreStatsHeaderLine();
+			//String headerLine = getCoreStatsHeaderLine();
+			String headerLine = headerList.get("CORE").getString();
 			HarvesterWLDFQueryRunner queryRunner = new HarvesterWLDFQueryRunner(getConn(), getServerName(), coreServerStatsQuery, getQueryIntervalMillis());
 			String contentLine = getCoreStatsLine(queryRunner.retrieveDataRecords()); 
 			getCSVStats().appendToResourceStatisticsCSV(new Date(), getServerName(), CORE_RESOURCE_TYPE, CORE_RSC_DEFAULT_NAME, headerLine, contentLine,getHostName());
@@ -138,7 +140,6 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 				
 			} else {
 				for (String attr : JROCKIT_MBEAN_MONITOR_ATTR_LIST) line.append(0 + SEPARATOR);
-			
 			}
 				
 			// Thread Pool attributes - thread pool may not exist if Use81StyleExecuteQueues is enabled
@@ -179,7 +180,8 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 	 * @throws DataRetrievalException Indicates problem occurred in trying to obtain and persist the server's statistics
 	 */
 	protected void logDataSourcesStats() throws DataRetrievalException {
-		logResourceStats(DATASOURCE_RESOURCE_TYPE, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, JDBC_DATASOURCE_RUNTIME), JDBC_MBEAN_MONITOR_ATTR_LIST, jdbcStatsQuery);
+		//logResourceStats(DATASOURCE_RESOURCE_TYPE, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, JDBC_DATASOURCE_RUNTIME), JDBC_MBEAN_MONITOR_ATTR_LIST, jdbcStatsQuery);
+		logResourceStats(DATASOURCE_RESOURCE_TYPE, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, JDBC_DATASOURCE_RUNTIME),headerList.get("JDBC").getString(),JDBC_MBEAN_MONITOR_ATTR_LIST, jdbcStatsQuery);
 	}
 
 	/**
@@ -189,7 +191,10 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 	 * @throws DataRetrievalException Indicates problem occurred in trying to obtain and persist the server's statistics
 	 */
 	protected void logDestinationsStats() throws DataRetrievalException {
-		logResourceStats(DESTINATION_RESOURCE_TYPE, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, JMS_DESTINATION_RUNTIME), JMS_DESTINATION_MBEAN_MONITOR_ATTR_LIST, jmsDestinationStatsQuery);
+		//logResourceStats(DESTINATION_RESOURCE_TYPE, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, JMS_DESTINATION_RUNTIME), JMS_DESTINATION_MBEAN_MONITOR_ATTR_LIST, jmsDestinationStatsQuery);
+		logResourceStats(DESTINATION_RESOURCE_TYPE, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, JMS_DESTINATION_RUNTIME), headerList.get("JMS").getString(),JMS_DESTINATION_MBEAN_MONITOR_ATTR_LIST, jmsDestinationStatsQuery);
+
+
 	}
 
 	/**
@@ -199,7 +204,8 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 	 * @throws DataRetrievalException Indicates problem occurred in trying to obtain and persist the server's statistics
 	 */
 	protected void logWebAppStats() throws DataRetrievalException {
-		logResourceStats(WEBAPP_RESOURCE_TYPE, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, WEBAPP_COMPONENT_RUNTIME), WEBAPP_MBEAN_MONITOR_ATTR_LIST, webAppStatsQuery);
+		//logResourceStats(WEBAPP_RESOURCE_TYPE, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, WEBAPP_COMPONENT_RUNTIME), WEBAPP_MBEAN_MONITOR_ATTR_LIST, webAppStatsQuery);
+		logResourceStats(WEBAPP_RESOURCE_TYPE, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, WEBAPP_COMPONENT_RUNTIME),headerList.get("WEBAPP").getString(),WEBAPP_MBEAN_MONITOR_ATTR_LIST,webAppStatsQuery);
 	}
 	
 	/**
@@ -217,7 +223,8 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 	 * @throws DataRetrievalException Indicates problem occurred in trying to obtain and persist the server's statistics
 	 */
 	protected void logHostMachineStats() throws DataRetrievalException {
-		logResourceStats(HOSTMACHINE_RESOURCE_TYPE, HOST_MACHINE_MBEAN, HOST_MACHINE_STATS_MBEAN_MONITOR_ATTR_LIST, hostMachineStatsQuery);		
+		//logResourceStats(HOSTMACHINE_RESOURCE_TYPE, HOST_MACHINE_MBEAN, HOST_MACHINE_STATS_MBEAN_MONITOR_ATTR_LIST, hostMachineStatsQuery);		
+		logResourceStats(HOSTMACHINE_RESOURCE_TYPE, HOST_MACHINE_MBEAN, headerList.get("HOST").getString(),HOST_MACHINE_STATS_MBEAN_MONITOR_ATTR_LIST ,hostMachineStatsQuery);
 	}
 
 	/**
@@ -228,8 +235,10 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 	 * @throws IOException Indicates a problem in retrieving and persisting statistics
 	 */
 	protected void logExtendedStats() throws DataRetrievalException, IOException {
-		logResourceStats(WORKMGR_RESOURCE_TYPE, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, WORK_MANAGER_RUNTIME), WKMGR_MBEAN_MONITOR_ATTR_LIST, wkMgrStatsQuery);
-		logResourceStats(SVRCHNL_RESOURCE_TYPE, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, SERVER_CHANNEL_RUNTIME), SVR_CHANNEL_MBEAN_MONITOR_ATTR_LIST, svrChnlStatsQuery);
+		//logResourceStats(WORKMGR_RESOURCE_TYPE, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, WORK_MANAGER_RUNTIME), WKMGR_MBEAN_MONITOR_ATTR_LIST, wkMgrStatsQuery);
+		logResourceStats(WORKMGR_RESOURCE_TYPE, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, WORK_MANAGER_RUNTIME),headerList.get("WKMGR").getString(),WKMGR_MBEAN_MONITOR_ATTR_LIST, wkMgrStatsQuery);
+		//logResourceStats(SVRCHNL_RESOURCE_TYPE, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, SERVER_CHANNEL_RUNTIME), SVR_CHANNEL_MBEAN_MONITOR_ATTR_LIST, svrChnlStatsQuery);
+		logResourceStats(SVRCHNL_RESOURCE_TYPE, String.format(RUNTIME_MBEAN_TYPE_TEMPLATE, SERVER_CHANNEL_RUNTIME),headerList.get("SRVCHN").getString(),SVR_CHANNEL_MBEAN_MONITOR_ATTR_LIST, svrChnlStatsQuery);
 	}
 
 	/**
@@ -244,9 +253,12 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 	 * @param wldfQuery The WLDF query to run against the remote server's harvester log
 	 * @throws DataRetrievalException Indicates a problem occurred in retrieving the WLDF data
 	 */
-	private void logResourceStats(String resourceType, String mbeanPropertyName, String[] monitorAttrList, String wldfQuery) throws DataRetrievalException {
+//	private void logResourceStats(String resourceType, String mbeanPropertyName, String headerLine, String[] monitorAttrList, String wldfQuery) throws DataRetrievalException {
+	private void logResourceStats(String resourceType, String mbeanPropertyName, String headerLine, String[] monitorAttrList, String wldfQuery) throws DataRetrievalException {
 		try {
-			String headerLine = constructHeaderLine(monitorAttrList);
+			
+			//String headerLine = constructHeaderLine(monitorAttrList);
+			
 			Date nowDate = new Date();
 			String now = (new SimpleDateFormat(DATETIME_PARAM_FORMAT)).format(nowDate);
 			Properties artifactList = new Properties();
@@ -314,7 +326,9 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 	 */
 	private void logResourceEJBStats() throws DataRetrievalException {
 		try {
-			String headerLine = constructHeaderLine(EJB_MBEAN_MONITOR_ATTR_LIST);
+		
+			//String headerLine = constructHeaderLine(EJB_MBEAN_MONITOR_ATTR_LIST);
+			String headerLine=headerList.get("EJB").getString();
 			Date nowDate = new Date();
 			String now = (new SimpleDateFormat(DATETIME_PARAM_FORMAT)).format(nowDate);
 			Properties artifactList = new Properties();

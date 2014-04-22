@@ -43,6 +43,23 @@ public class MonitorProperties {
 		System.arraycopy(b, 0, c, aLen, bLen);
 		return c;
 	}
+
+	public static String[] ArrayConcatAll(String[]... jobs) {
+        	int len = 0;
+        	for (final String[] job : jobs) {
+            		len += job.length;
+        	}
+
+        	final String[] result = new String[len];
+
+        	int currentPos = 0;
+        	for (final String[] job : jobs) {
+            		System.arraycopy(job, 0, result, currentPos, job.length);
+            		currentPos += job.length;
+        	}
+
+        	return result;
+    	}
 	
 
 	/**
@@ -62,6 +79,7 @@ public class MonitorProperties {
 		//core
 		String[] server_list=null;
 		String[] jvm_list=null;
+		String[] jvm_list_header=null;
 		String[] jrockit_list=null;
 		String[] threadpool_list=null;
 		String[] jta_list=null;
@@ -92,7 +110,8 @@ public class MonitorProperties {
 			j_thread	= new String[] {J_CUR_DAEMON_THREAD_COUNT,J_CUR_NON_DAEMON_THREAD_COUNT,J_CUR_TOTAL_THREAD_COUNT,J_TOTAL_STARTED_THREAD_COUNT };
 			//core
 			server_list 	= new String[] {SERVER_STATE,OPEN_SOCKETS};
-			jvm_list	= new String[] {HEAP_SIZE_CURRENT, HEAP_FREE_CURRENT, HEAP_FREE_PERCENT}; //can not change this !!
+			jvm_list	= new String[] {HEAP_SIZE_CURRENT, HEAP_FREE_CURRENT,HEAP_FREE_PERCENT}; //can not change this !!
+			jvm_list_header = new String[] {HEAP_SIZE_CURRENT, HEAP_FREE_CURRENT,HEAP_USED_CURRENT,HEAP_FREE_PERCENT}; //can not change this !!
 			jrockit_list	= new String[] {JVM_PROCESSOR_LOAD,TOTAL_GC_COUNT,TOTAL_GC_TIME,TOTAL_NURSERY_SIZE,HEAP_SIZE_MAX};
 			threadpool_list = new String[] {EXECUTE_THREAD_TOTAL_COUNT,HOGGING_THREAD_COUNT,EXECUTE_THREAD_IDLE_COUNT,STANDBY_THREAD_COUNT,THROUGHPUT};
 			jta_list	= new String[] {TRANSACTION_TOTAL_COUNT, TRANSACTION_ROLLEDBACK_COUNT};
@@ -123,7 +142,10 @@ public class MonitorProperties {
 
 			//core
 			server_list 	= new String[] {SERVER_STATE, OPEN_SOCKETS};
+			//jvm has diferent atributes for WLDF harvester module and for final header line becouse of we are generating HEAP_USED_CURRENT 
 			jvm_list	= new String[] {HEAP_SIZE_CURRENT, HEAP_FREE_CURRENT, HEAP_FREE_PERCENT};
+			jvm_list_header	= new String[] {HEAP_SIZE_CURRENT, HEAP_FREE_CURRENT,HEAP_USED_CURRENT, HEAP_FREE_PERCENT};
+
 			jrockit_list    = new String[] {JVM_PROCESSOR_LOAD,TOTAL_GC_COUNT,TOTAL_GC_TIME,TOTAL_NURSERY_SIZE,HEAP_SIZE_MAX};	
 			threadpool_list	= new String[] {EXECUTE_THREAD_TOTAL_COUNT, HOGGING_THREAD_COUNT, PENDING_USER_REQUEST_COUNT, THREAD_POOL_QUEUE_LENGTH, COMPLETED_REQUEST_COUNT, EXECUTE_THREAD_IDLE_COUNT, MIN_THREADS_CONSTRAINT_COMPLETED, MIN_THREADS_CONSTRAINT_PENDING, STANDBY_THREAD_COUNT, THROUGHPUT};
 			jta_list	= new String[] {TRANSACTION_TOTAL_COUNT, TRANSACTION_COMMITTED_COUNT, TRANSACTION_ROLLEDBACK_COUNT, TRANSACTION_HEURISTICS_TOTAL_COUNT, TRANSACTION_ABANDONED_TOTAL_COUNT, TRANSACTIONS_ACTIVE_TOTAL_COUNT};
@@ -151,13 +173,18 @@ public class MonitorProperties {
 		J_MEMORY_MBEAN_ATTR_LIST		=j_mem;
 		J_MEMORYPOOL_MBEAN_ATTR_LIST		=j_memp;
 		J_TREAD_MBEAN_ATTR_LIST			=j_thread;
+		J_MBEAN_ALL				=ArrayConcatAll(j_cl,j_comp,j_gc,j_mem,j_memp,j_thread);
 
 		//core list
 		SERVER_MBEAN_MONITOR_ATTR_LIST		=server_list;
 		JVM_MBEAN_MONITOR_ATTR_LIST		=jvm_list; //can not be changed beacause of hardcoded parameters over 
+		
 		JROCKIT_MBEAN_MONITOR_ATTR_LIST		=jrockit_list;
 		THREADPOOL_MBEAN_MONITOR_ATTR_LIST	=threadpool_list;
 		JTA_MBEAN_MONITOR_ATTR_LIST		=jta_list;
+
+		//used only to create header line on csv files
+		J_CORE_ALL				=ArrayConcatAll(server_list,jvm_list_header,jrockit_list,threadpool_list,jta_list);
 		//needed for harvester
 		JROCKIT_FULL_MBEAN_MONITOR_ATTR_LIST	= ArrayConcat(jvm_list,jrockit_list);
 		//jdbc
@@ -311,6 +338,8 @@ public class MonitorProperties {
 	public static String[]	J_MEMORYPOOL_MBEAN_ATTR_LIST;
 	public static String[]  J_TREAD_MBEAN_ATTR_LIST;
 
+	public static String[]	J_MBEAN_ALL;
+
 
 	/**
 	 * List of Server MBean Attributes to be monitored
@@ -341,6 +370,8 @@ public class MonitorProperties {
 	 * List of JTA MBean Attributes to be monitored
 	 */
 	public static String[] JTA_MBEAN_MONITOR_ATTR_LIST;
+
+	public static String[] J_CORE_ALL;
 
 	/**
 	 * List of JDBC Data Source MBean Attributes to be monitored
