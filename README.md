@@ -17,6 +17,12 @@ Collected Metrics
 
 From each managed server DomainHealth try to garther following metrics.
 
+* __jvm__:
+   * Loaded/Unloaded Classes.
+   * Compilation time.
+   * Heap/NonHeap memory data.
+   * Memory Pools informaction.
+   * Garbage Collection metrics.
 * __Core__: 
    * Server State and Open Sockets
    * JVM HEAP size,free,%used.
@@ -86,9 +92,11 @@ Configuration
 
 DomainHealth-NG have maintained the old configuration system from Original DomainHealth with -D<parameter_key>=<value> style config but also introduces a new dh_global.properties file to centralize all config parameters and simplify changes and maintenance.
 
-In this way you should configure by setting only one parameter dh_config_file as the only JAVA_OPTIONS to add. An default dh_global.properties is located at the root of the sources directory.
+In this way you should configure all settings  configuring only one parameter dh_config_file as the only JAVA_OPTIONS to add or leaving a config file named "dh_global.properties" in the Domain root path.
 
-1.-  Edit setDomainEnv.sh and add at the end.
+ An default dh_global.properties is located at the root of the sources directory
+
+a)  You can config by editing setDomainEnv.sh and add at the end.
 
 ```
 case ${SERVER_NAME} in
@@ -99,8 +107,14 @@ case ${SERVER_NAME} in
 esac
 ```
 
+b) You can also config by placing the dh_global.properties file in the domain root path.
 
-2.- Edit dh_global.properties
+```
+$DOMAIN_ROOT/dh_global.properties
+```
+
+
+After you can edit dh_global.properties
 
 
 Configuration Parameters
@@ -117,7 +131,7 @@ Configuration Parameters
 
 ***Metric Configuration Parameters***
 
-* __dh_metric_type_set__: type of metric to gather among (core,datasource,jmsdestination,webapp,ejb,hostmachine,extended) Default: All
+* __dh_metric_type_set__: type of metric to gather among (jvm,core,datasource,jmsdestination,webapp,ejb,hostmachine,extended) Default: All
 * __dh_metric_deep_set__: set of metrics to gather among (basic/full). Default: full
 * __dh_component_blacklist__: The list of deployed application names which should not have statistics collected or displayed - usually used to prevent WebLogic internal applications from appearing in results
 
@@ -138,7 +152,7 @@ Configuration Parameters
 * __dh_graphite_send_buffer_size__:  Graphite output buffer size on heavily loaded systems better big buffers. Default: 1Mb
 * __dh_graphite_metric_use_host__: Enable a metric tree based on host better than a domain tree based approach. Default: True
 * __dh_graphite_metric_host_prefix__: hostname prefix. Default: pro.bbdd
-* __dh_graphite_metric_host_suffix__: hostname suffix. Default: wl
+* __dh_graphite_metric_host_suffix__: hostname suffix. Default: wls
 * __dh_graphite_default_host__:  “Machine” Name it uses in host based approach ( if not properly configured with console ) and the hostname in the AdminServer data. Default: default_host 
 * __dh_graphite_metric_force_domain_name__: fix bug on read weblogic domain name on server startup in 9.2. Default: my_domain:  
 * __dh_graphite_map_server_stats__:  Map server stats to numbers so the graphite backend will be able to store and render after.
