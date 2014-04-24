@@ -22,6 +22,16 @@ import java.io.FileInputStream;
 
 import javax.servlet.ServletContext;
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.management.MalformedObjectNameException;
+import javax.management.MBeanException;
+import javax.management.AttributeNotFoundException;
+import javax.management.InstanceNotFoundException;
+import javax.management.ReflectionException;
+
 /**
  * Provides access to application level properties which may be populated from 
  * a variety of places, including -D JVM parameters, web.xml context-params
@@ -195,7 +205,46 @@ public class AppProperties extends Properties {
 
 			
                 } else {
-			AppLog.getLogger().warning("Not Global config_file requested, usign system -D, and web.xml properties instead: ");
+				
+					try
+					{
+						InitialContext ctx = new InitialContext();
+						MBeanServer server = (MBeanServer)ctx.lookup("java:comp/env/jmx/runtime");
+						ObjectName service = new ObjectName("com.bea:Name=RuntimeService,Type=weblogic.management.mbeanservers.runtime.RuntimeServiceMBean");
+						ObjectName domain = (ObjectName)server.getAttribute(service, "DomainConfiguration");
+						String base_domain = server.getAttribute(domain, "RootDirectory").toString();
+						configProps.load(new FileInputStream(base_domain + "/dh_global.properties"));
+						//AppLog.getLogger().warning("Not Global config_file requested using system -D, and web.xml properties instead: ");
+						AppLog.getLogger().warning("System -D config file not found, using file in base domain path instead: ");
+					}
+					catch (NamingException e)
+					{
+						AppLog.getLogger().warning("Unable to load context to find base domain path: ");
+					}	
+					catch (MalformedObjectNameException e)
+					{
+						AppLog.getLogger().warning("Unable to load domain configuration object name: ");
+					}
+					catch (MBeanException e)
+					{
+						AppLog.getLogger().warning("Unable to read RuntimeService MBean: ");
+					}
+					catch (AttributeNotFoundException e)
+					{
+						AppLog.getLogger().warning("Unable to read RootDirectory attribute in RuntimeService MBean: ");
+					}
+					catch (InstanceNotFoundException e)
+					{
+						AppLog.getLogger().warning("Unable to read RootDirectory attribute in RuntimeService MBean: ");
+					}
+					catch (ReflectionException e)
+					{
+						AppLog.getLogger().warning("Unable to read RootDirectory attribute in RuntimeService MBean: ");
+					}
+					catch (IOException e) 
+					{
+						AppLog.getLogger().warning("Unable to load global config  properties in base domain: ");
+					}
 		}
 
 		loadProps(sc, baseProps,configProps);
