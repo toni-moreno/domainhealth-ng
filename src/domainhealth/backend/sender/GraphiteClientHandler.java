@@ -78,22 +78,29 @@ public class GraphiteClientHandler extends SimpleChannelUpstreamHandler {
     @Override
      public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
      //System.out.println("Disconnected from: " + getRemoteAddress());
-	println("Disconnected from: " + getRemoteAddress());
+	 
+		println("Disconnected from: " + getRemoteAddress());
+
      }
 
   @Override
   public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) {
       println("Sleeping for: " + this.RECONNECT_TIMEOUT + 's');
-      timer.newTimeout(new TimerTask() {
-          public void run(Timeout timeout) throws Exception {
-		try {
-              		println("Reconnecting to: " + getRemoteAddress());
-			bootstrap.connect();
-		} catch (Exception e) {
-			AppLog.getLogger().error("Error cn trying to reconnect after Reconnect timeout expired : " + e.getMessage(),e);
-		}
-          }
-      }, this.RECONNECT_TIMEOUT, TimeUnit.SECONDS);
+	  println("ChannelClosed: " + GraphiteBackgroundSender.isShuttingDown()); 
+	  if (!GraphiteBackgroundSender.isShuttingDown())
+	  {
+		timer.newTimeout(new TimerTask() {
+		public void run(Timeout timeout) throws Exception {
+			try {
+                println("Reconnecting to: " + getRemoteAddress());
+				bootstrap.connect();
+			} catch (Exception e) {
+				AppLog.getLogger().error("Error cn trying to reconnect after Reconnect timeout expired : " + e.getMessage(),e);
+			}
+          }}, this.RECONNECT_TIMEOUT, TimeUnit.SECONDS);
+	   }
+
+      
   }
 
     @Override
@@ -122,10 +129,12 @@ public class GraphiteClientHandler extends SimpleChannelUpstreamHandler {
           }
           if (cause instanceof ReadTimeoutException) {
               // The connection was OK but there was no traffic for last period.
-	     AppLog.getLogger().error("Disconnecting due to no inbound traffic " + cause.getMessage(),cause);
+			AppLog.getLogger().error("Disconnecting due to read timeout " + cause.getMessage(),cause);
               //println("Disconnecting due to no inbound traffic");
           } else {
-              cause.printStackTrace();
+			AppLog.getLogger().error("Disconnecting due to no inbound traffic " + cause.getMessage(),cause);
+             
+			//cause.printStackTrace();
           }
           ctx.getChannel().close();
         //e.getChannel().close();

@@ -46,6 +46,7 @@ import org.jboss.netty.channel.*;
 import org.jboss.netty.bootstrap.*;
 import org.jboss.netty.util.HashedWheelTimer;
 import org.jboss.netty.util.Timer;
+import org.jboss.netty.buffer.ChannelBuffers; 
 
 
 
@@ -75,6 +76,7 @@ public class GraphiteBackgroundSender {
 	private String metric_domain_name; //
 	private boolean useDomainName; 
 	private boolean metric_use_host;
+	private static boolean is_shutting_down; 
 	private int reconnect_timeout;
 	private int send_buffer_size;
 
@@ -111,6 +113,8 @@ public class GraphiteBackgroundSender {
 	 */
 	public GraphiteBackgroundSender(AppProperties appProps) {
 		AppLog.getLogger().info("initializing beggining Graphite sender ");
+		
+		is_shutting_down = false;
 
 		this.carbon_host=appProps.getProperty(PropKey.GRAPHITE_CARBON_HOST_PROP);
 		if(this.carbon_host == null ) this.carbon_host="localhost"; 
@@ -177,7 +181,7 @@ public class GraphiteBackgroundSender {
 	 */
 	public void startup() {
 
-		try {
+		try { 
 			Timer timer = new HashedWheelTimer();
 			AppLog.getLogger().info("Graphite sender Background starting up");
 			AppLog.getLogger().debug("Created background Java daemon thread to drive data retrieval process");
@@ -208,7 +212,7 @@ public class GraphiteBackgroundSender {
 
 		} catch (Exception e) {
 			AppLog.getLogger().critical("Statistics Retriever Background Service has been disabled. Reason: " + e.toString());
-			throw new RuntimeException(e);
+			//throw new RuntimeException(e);
 		}
 	}
 
@@ -219,12 +223,20 @@ public class GraphiteBackgroundSender {
 	public void shutdown() {
 		AppLog.getLogger().info("Statistics Retriever Background Service shutting down");
 		try {
-			Channel channel=gpf.getCurrentPipeline().getChannel();
-			channel.close().awaitUninterruptibly();
+			is_shutting_down = true; 
+			Channel channel=gpf.getCurrentPipeline().getChannel(); 
+			//cf.getChannel().getCloseFuture().awaitUninterruptibly(); 
+			//cf.getChannel().close().awaitUninterruptibly(); 
+			cf.getChannel().write(ChannelBuffers.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+			AppLog.getLogger().info("Close channel"); 
+			channelFactory.releaseExternalResources();
+			AppLog.getLogger().info("Release factory resources"); 
 			bootstrap.releaseExternalResources();
+			AppLog.getLogger().info("Release client resources"); 
+			
 		} catch (Exception e) {
-	        	AppLog.getLogger().critical("error on channel retrieval: " + e.toString());
-			throw new RuntimeException(e);
+	        	AppLog.getLogger().error("error on channel retrieval: " + e.toString(), e);
+			//throw new RuntimeException(e);
 
 		}
 
@@ -387,5 +399,11 @@ public class GraphiteBackgroundSender {
 	}
 	
 	}
+	
+	public static boolean isShuttingDown ()
+	{
+		return is_shutting_down; 
+	}
+	
 
 }

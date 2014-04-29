@@ -215,7 +215,7 @@ public class AppProperties extends Properties {
 						String base_domain = server.getAttribute(domain, "RootDirectory").toString();
 						configProps.load(new FileInputStream(base_domain + "/dh_global.properties"));
 						//AppLog.getLogger().warning("Not Global config_file requested using system -D, and web.xml properties instead: ");
-						AppLog.getLogger().warning("System -D config file not found, using file in base domain path instead: ");
+						AppLog.getLogger().warning("[DomainHealth-NG]: System -D config file param not found, using config file in base domain path instead: ");
 					}
 					catch (NamingException e)
 					{
