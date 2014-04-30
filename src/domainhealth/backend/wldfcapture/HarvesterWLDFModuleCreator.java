@@ -40,11 +40,12 @@ public class HarvesterWLDFModuleCreator {
 	 * @param domainhealthVersionNumber The version number of DomainHealth and the WLDF module which should be present or created
 	 * @param wlsVersionNumber The version of the host WebLogic Domain
 	 */
-	public HarvesterWLDFModuleCreator(int queryIntervalMillis, String domainhealthVersionNumber, String wlsVersionNumber) {
+	public HarvesterWLDFModuleCreator(int queryIntervalMillis, String domainhealthVersionNumber, String wlsVersionNumber, String domainhealthCompilationTime) {
 		this.queryIntervalMillis = queryIntervalMillis;
 		this.domainhealthVersionNumber = domainhealthVersionNumber;
 		this.wlsVersionNumber = wlsVersionNumber;
-		moduleDescription = String.format(MODULE_DESC_TMPLT, domainhealthVersionNumber);
+		this.domainhealthCompilationTime = domainhealthCompilationTime; 
+		moduleDescription = String.format(MODULE_DESC_TMPLT, domainhealthVersionNumber, domainhealthCompilationTime);
 	}
 	
 	/**
@@ -59,7 +60,7 @@ public class HarvesterWLDFModuleCreator {
 	 * case this method will ALWAYS return true.
 	 * 
 	 * @return True of WLDF harvesting can be use for Domain Health statistics retrieval; otherwise false
-	 * @throws WebLogicMBeanException Indicates that there is a problem in trying to query the doamin to see if WLDF can be used
+	 * @throws WebLogicMBeanException Indicates that there is a problem in trying to query the domain to see if WLDF can be used
 	 */
 	public boolean isDomainHealthAbleToUseWLDF() throws WebLogicMBeanException {
 		if (ProductVersionUtil.isVersion_X_GreaterThanOrEqualTo_Y(wlsVersionNumber, WLS_MIN_VERSION_FOR_MULTI_WLDF_MODULES)) {
@@ -236,7 +237,7 @@ public class HarvesterWLDFModuleCreator {
 		Matcher matcher = MODULE_VERSION_EXTRACTOR_PATTERN.matcher(description);
 		boolean found = matcher.find();
 		
-		if ((found) && (matcher.groupCount() > 0) && (matcher.group(1).equals(domainhealthVersionNumber))) {
+		if ((found) && (matcher.groupCount() > 0) && (matcher.group(1).equals(domainhealthVersionNumber + "." + domainhealthCompilationTime))) {
 			return true;
 		} else {
 			return false;				
@@ -447,13 +448,14 @@ public class HarvesterWLDFModuleCreator {
 	private final String domainhealthVersionNumber;
 	private final String wlsVersionNumber;
 	private final String moduleDescription;
+	private final String domainhealthCompilationTime; 
 	
 	// Constants
 	private static final String WLS_MIN_VERSION_FOR_MULTI_WLDF_MODULES = "12.1.2";
 	private final static String HARVESTER_MODULE_NAME = "DomainHealth_NG_WLDFHarvesterModule";
 	private final static String RETIRE_POLICY_NAME_TEMPLATE = "DomainHealth_NG_WLDFRetirePolicy_%s";
-	private final static String MODULE_DESC_TMPLT = "WLDF Module for the 'DomainHealth NG' monitoring application. Harvests important Core, JDBC. JMS, WebApp, EJB, Work Manager and Server Channel statistics for each server in the domain, ready to be queried by the DomainHealth web application running on the domain's Admin Server. v%s.";
-	private final static Pattern MODULE_VERSION_EXTRACTOR_PATTERN = Pattern.compile(".*\\. v(\\d+\\.\\d+\\.?\\d*[a-zA-Z]*\\d*)\\.$");
+	private final static String MODULE_DESC_TMPLT = "WLDF Module for the 'DomainHealth NG' monitoring application. Harvests important Core, JDBC. JMS, WebApp, EJB, Work Manager and Server Channel statistics for each server in the domain, ready to be queried by the DomainHealth web application running on the domain's Admin Server. v%s.%s.";
+	private final static Pattern MODULE_VERSION_EXTRACTOR_PATTERN = Pattern.compile(".*\\. v(\\d+\\.\\d+\\.?\\d*[a-zA-Z]*\\d*\\.?\\d*)\\.$");
 	private final static String HAVESTER_ARCHIVE_NAME = "HarvestedDataArchive";
 	private final static int OLD_DATA_AGE_HOURS = 1;
 	private final static int DATA_RETIREMENT_START_HOUR_OF_DAY = 2;	

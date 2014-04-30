@@ -356,6 +356,8 @@ public class GraphiteBackgroundSender {
 		DateFormat formatter=new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date date;
 
+		//AppLog.getLogger().info("header line: " + headerLine);
+		//AppLog.getLogger().info("content line: " + contentLine);
 		List<String> metricItems = Arrays.asList(headerLine.split(","));
 		List<String> contentItems = Arrays.asList(contentLine.split(","));
 		try {
