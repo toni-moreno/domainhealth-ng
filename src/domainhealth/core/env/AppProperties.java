@@ -107,6 +107,12 @@ public class AppProperties extends Properties {
 		 * The domain health version date property name ("dh_version_date")
 		 */
 		VERSION_DATE_PROP { public String toString() { return "dh_version_date"; } },
+		
+		/**
+		 * The domain health compilation time property name ("dh_compilation_time")
+		 */
+		COMPILATION_TIME_PROP { public String toString() { return "dh_compilation_time"; } },
+		
 		/// Graphite properties
 		/**
 		 * The Graphite  property name ("dh_graphite_carbon_host")
@@ -174,6 +180,7 @@ public class AppProperties extends Properties {
 	public AppProperties(ServletContext sc) {
 		InputStream in = null;
 		Properties baseProps = new Properties();
+		Properties compProps = new Properties(); 
 		Properties configProps = new Properties();
 
 		// Loading base properties
@@ -183,6 +190,16 @@ public class AppProperties extends Properties {
 			baseProps.load(in);			
 		} catch (IOException e) {
 			AppLog.getLogger().warning("Unable to load base properties from WAR internal path: " + VERSION_PROPS_FILEPATH);
+		} finally {
+			try { in.close(); } catch (Exception e) { e.printStackTrace(); }
+		}
+		
+		// Loading compilation properties
+	    try {
+			in = sc.getResourceAsStream(COMPILATION_PROPS_FILEPATH);
+			compProps.load(in);			
+		} catch (IOException e) {
+			AppLog.getLogger().warning("Unable to load compilation properties from WAR internal path: " + COMPILATION_PROPS_FILEPATH);
 		} finally {
 			try { in.close(); } catch (Exception e) { e.printStackTrace(); }
 		}
@@ -247,7 +264,7 @@ public class AppProperties extends Properties {
 					}
 		}
 
-		loadProps(sc, baseProps,configProps);
+		loadProps(sc, baseProps,configProps, compProps);
 	}
 
 	/**
@@ -315,7 +332,7 @@ public class AppProperties extends Properties {
 	 * @param sc The servlet context
 	 * @param baseProps The base properties to use if not overriden from another source
 	 */
-	private void loadProps(ServletContext sc, Properties baseProps,Properties globalProps) {
+	private void loadProps(ServletContext sc, Properties baseProps,Properties globalProps, Properties compProps) {
 		for (PropKey key : PropKey.values()) {
 			// Global config properties always first 
 			String value =  globalProps.getProperty(key.toString());
@@ -334,6 +351,11 @@ public class AppProperties extends Properties {
 				value = baseProps.getProperty(key.toString());
 			}
 			
+			// compilation properties
+			if ((value == null) || (value.length() <= 0)) {
+				value = compProps.getProperty(key.toString()); 
+			}
+			
 			// finally save this property 
 			if ((value != null) && (value.length() > 0)) {
 				setProperty(key.toString(), value);
@@ -345,4 +367,5 @@ public class AppProperties extends Properties {
 	// Constants
 	private static final long serialVersionUID = 1L;
 	private static final String VERSION_PROPS_FILEPATH = "/WEB-INF/version.props";
+	private static final String COMPILATION_PROPS_FILEPATH = "/WEB-INF/compilation.props"; 
 }

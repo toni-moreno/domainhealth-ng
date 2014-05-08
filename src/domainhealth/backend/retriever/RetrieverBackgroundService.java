@@ -62,6 +62,7 @@ public class RetrieverBackgroundService {
 	 */
 	public RetrieverBackgroundService(AppProperties appProps) {
 		this.domainhealthVersionNumber = appProps.getProperty(PropKey.VERSION_NUMBER_PROP);
+		this.domainhealthCompilationTime = appProps.getProperty(PropKey.COMPILATION_TIME_PROP); 
 		this.alwaysUseJMXPoll = appProps.getBoolProperty(PropKey.ALWAYS_USE_JMXPOLL_PROP);
 		this.statisticsRetainNumDays = appProps.getIntProperty(PropKey.CSV_RETAIN_NUM_DAYS);
 		this.statisticsStorage = new StatisticsStorage(appProps.getProperty(PropKey.STATS_OUTPUT_PATH_PROP),
@@ -236,7 +237,7 @@ public class RetrieverBackgroundService {
 		}
 		
 		if (useWLDFHarvester) {				
-			HarvesterWLDFModuleCreator harvesterModule = new HarvesterWLDFModuleCreator(queryIntervalMillis, domainhealthVersionNumber, wlsVersionNumber);
+			HarvesterWLDFModuleCreator harvesterModule = new HarvesterWLDFModuleCreator(queryIntervalMillis, domainhealthVersionNumber, wlsVersionNumber, domainhealthCompilationTime);
 			
 			if (harvesterModule.isDomainHealthAbleToUseWLDF()) {
 				useWLDFHarvester = true;					
@@ -541,6 +542,7 @@ public class RetrieverBackgroundService {
 	private final boolean sendDHStatsToGraphite;
 
 	private final String domainhealthVersionNumber;
+	private final String domainhealthCompilationTime; 
 	private final boolean alwaysUseJMXPoll;
 	private final int statisticsRetainNumDays;
 	private final int queryIntervalMillis;
