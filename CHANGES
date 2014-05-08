@@ -1,5 +1,14 @@
 DomainHealth-NG CHANGES
 =======================
+1.1.9: 8-May-2014 ( Toni Moreno / David Maza)
+  * Removed graphical frontend. (TM)
+  * Added defaul location for dh_config.properties main config file. (DM)
+  * Fixed WLDF install compilation time in version to avoid errors on new metric. (DM)
+  * Some exception fixed (DM)
+
+1.1.8: 4-Apr-2014 ( Toni Moreno)
+  added jvm Mbean statistics for java above 1.5 version
+
 1.1.7: 15-Mar-2014 (Toni Moreno)
   Fixed:Added default values to logfile and loglevel log4j values.
   Redirect captured exceptions to log4j file.

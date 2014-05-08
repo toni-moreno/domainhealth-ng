@@ -356,8 +356,8 @@ public class GraphiteBackgroundSender {
 		DateFormat formatter=new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date date;
 
-		//AppLog.getLogger().info("header line: " + headerLine);
-		//AppLog.getLogger().info("content line: " + contentLine);
+		if (!contentLine.equals("")) 
+		{
 		List<String> metricItems = Arrays.asList(headerLine.split(","));
 		List<String> contentItems = Arrays.asList(contentLine.split(","));
 		try {
@@ -393,8 +393,10 @@ public class GraphiteBackgroundSender {
 				}
 				counterAdd(serverName,size-1); // not counting DateTime column
 			}
+	    
 		} catch (Exception e) {
                         AppLog.getLogger().error("error on parse date: " + e.toString(),e);
+		}
 		}
 	} catch (Exception e) {
 	        AppLog.getLogger().error("error on channel retrieval: " + e.toString(),e);

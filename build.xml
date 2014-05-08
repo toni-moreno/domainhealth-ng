@@ -1,9 +1,19 @@
 <?xml version="1.0"?>
 <!DOCTYPE project>
+
 <project name="domainhealth-ng" default="package">				
 	<target name="init">
 		<property file="local.properties"/> 
 		<property file="WebContent/WEB-INF/version.props"/>
+		<script language="javascript">
+			<![CDATA[
+				property = project.setProperty("now",Math.floor((new Date()).getTime()/1000));
+			]]>
+		</script>
+		<!--echo message="${now}" /-->
+		<echo>APP-VERSION=${dh_version_number}</echo>
+		<delete file="WebContent/WEB-INF/compilation.props"/>
+		<echo file="WebContent/WEB-INF/compilation.props">dh_compilation_time=${now}</echo>
 		<echo file=".version.tmp">APP-VERSION=${dh_version_number}</echo>
 		<replace file=".version.tmp" token="."/>
 		<property file=".version.tmp"/> 
