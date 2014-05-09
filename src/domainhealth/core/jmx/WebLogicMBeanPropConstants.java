@@ -376,7 +376,7 @@ public interface WebLogicMBeanPropConstants {
 	/**
 	 * 'State' MBean property
 	 */
-	public final static String SERVER_STATE = "State";
+	public final static String SERVER_STATE = "StateVal";
 	
 	/**
 	 * 'OpenSocketsCurrentCount' MBean property

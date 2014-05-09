@@ -63,6 +63,7 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 	 */
 	public StatisticCapturerWLDFQuery(StatisticsStorage csvStats, WebLogicMBeanConnection conn, ObjectName serverRuntime, String serverName, int queryIntervalMillis, List<String> componentBlacklist, List<String> metricTypeSet, String wlsVersionNumber,String jvmVersion) {
 		super(csvStats, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, metricTypeSet,wlsVersionNumber,jvmVersion);
+		this.metricTypeSet = metricTypeSet;
 	}
 
 	/**
@@ -71,10 +72,20 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 	protected void logCoreStats() throws DataRetrievalException {
 		try {
 			//String headerLine = getCoreStatsHeaderLine();
-			String headerLine = headerList.get("CORE").getString();
-			HarvesterWLDFQueryRunner queryRunner = new HarvesterWLDFQueryRunner(getConn(), getServerName(), coreServerStatsQuery, getQueryIntervalMillis());
-			String contentLine = getCoreStatsLine(queryRunner.retrieveDataRecords()); 
-			getCSVStats().appendToResourceStatisticsCSV(new Date(), getServerName(), CORE_RESOURCE_TYPE, CORE_RSC_DEFAULT_NAME, headerLine, contentLine,getHostName());
+			if (!metricTypeSet.contains("jvm"))
+			{
+				String headerLine = headerList.get("CORE_WITH_JVM").getString();
+				HarvesterWLDFQueryRunner queryRunner = new HarvesterWLDFQueryRunner(getConn(), getServerName(), coreServerStatsQuery, getQueryIntervalMillis());
+				String contentLine = getCoreStatsLine(queryRunner.retrieveDataRecords()); 
+				getCSVStats().appendToResourceStatisticsCSV(new Date(), getServerName(), CORE_RESOURCE_TYPE, CORE_RSC_DEFAULT_NAME, headerLine, contentLine,getHostName());
+			}
+			else
+			{
+				String headerLine = headerList.get("CORE_WITHOUT_JVM").getString();
+				HarvesterWLDFQueryRunner queryRunner = new HarvesterWLDFQueryRunner(getConn(), getServerName(), coreServerStatsQuery, getQueryIntervalMillis());
+				String contentLine = getCoreStatsLine(queryRunner.retrieveDataRecords()); 
+				getCSVStats().appendToResourceStatisticsCSV(new Date(), getServerName(), CORE_RESOURCE_TYPE, CORE_RSC_DEFAULT_NAME, headerLine, contentLine,getHostName());
+			}
 		} catch (Exception e) {
 			throw new DataRetrievalException("Problem logging " + CORE_RESOURCE_TYPE + " resources for server " + getServerName(), e);
 		}		
@@ -117,29 +128,37 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 			String jvmObjectName = jvmTypeRecord.getInstanceNames().next();
 			InstanceDataRecord jvmObjectRecord = jvmTypeRecord.getInstanceDataRecord(jvmObjectName);
 
-			long heap_size_current = Long.parseLong(jvmObjectRecord.getAttrValue(HEAP_SIZE_CURRENT));
-			long heap_free_current = Long.parseLong(jvmObjectRecord.getAttrValue(HEAP_FREE_CURRENT));
+			if (!metricTypeSet.contains("jvm"))
+			{
+				long heap_size_current = Long.parseLong(jvmObjectRecord.getAttrValue(HEAP_SIZE_CURRENT));
+				long heap_free_current = Long.parseLong(jvmObjectRecord.getAttrValue(HEAP_FREE_CURRENT));
 	
-			line.append( (heap_size_current / BYTES_IN_MEGABYTE) + SEPARATOR);
-			line.append( (heap_free_current / BYTES_IN_MEGABYTE) + SEPARATOR);
-			line.append( (( heap_size_current - heap_free_current ) / BYTES_IN_MEGABYTE) + SEPARATOR);
-			line.append( jvmObjectRecord.getAttrValue(HEAP_FREE_PERCENT) + SEPARATOR);
-		
+				line.append( (heap_size_current / BYTES_IN_MEGABYTE) + SEPARATOR);
+				line.append( (heap_free_current / BYTES_IN_MEGABYTE) + SEPARATOR);
+				line.append( (( heap_size_current - heap_free_current ) / BYTES_IN_MEGABYTE) + SEPARATOR);
+				line.append( jvmObjectRecord.getAttrValue(HEAP_FREE_PERCENT) + SEPARATOR);
+			}
 			if(useJRockit) {
 				double jvm_proc_load	=Double.parseDouble(jvmObjectRecord.getAttrValue(JVM_PROCESSOR_LOAD));
-				String total_gc_count	=jvmObjectRecord.getAttrValue(TOTAL_GC_COUNT);
-				String total_gc_time	=jvmObjectRecord.getAttrValue(TOTAL_GC_TIME);
-				long total_nursery_size	=Long.parseLong(jvmObjectRecord.getAttrValue(TOTAL_NURSERY_SIZE));
-				long heap_max_size	=Long.parseLong(jvmObjectRecord.getAttrValue(HEAP_SIZE_MAX));
-	
 				line.append( ((double)Math.round(jvm_proc_load * 100 * 100) / 100.0) + SEPARATOR);
-				line.append( total_gc_count + SEPARATOR);
-				line.append( total_gc_time + SEPARATOR);
-				line.append( ( total_nursery_size / BYTES_IN_MEGABYTE) + SEPARATOR);
-				line.append( ( heap_max_size / BYTES_IN_MEGABYTE) + SEPARATOR);
-				
+				if (!metricTypeSet.contains("jvm"))
+				{
+					String total_gc_count	=jvmObjectRecord.getAttrValue(TOTAL_GC_COUNT);
+					String total_gc_time	=jvmObjectRecord.getAttrValue(TOTAL_GC_TIME);
+					long total_nursery_size	=Long.parseLong(jvmObjectRecord.getAttrValue(TOTAL_NURSERY_SIZE));
+					long heap_max_size	=Long.parseLong(jvmObjectRecord.getAttrValue(HEAP_SIZE_MAX));
+	
+
+					line.append( total_gc_count + SEPARATOR);
+					line.append( total_gc_time + SEPARATOR);
+					line.append( ( total_nursery_size / BYTES_IN_MEGABYTE) + SEPARATOR);
+					line.append( ( heap_max_size / BYTES_IN_MEGABYTE) + SEPARATOR);
+				}
 			} else {
-				for (String attr : JROCKIT_MBEAN_MONITOR_ATTR_LIST) line.append(0 + SEPARATOR);
+				if (!metricTypeSet.contains("jvm"))
+				{
+					for (String attr : JROCKIT_MBEAN_MONITOR_ATTR_LIST) line.append(0 + SEPARATOR);
+				}
 			}
 				
 			// Thread Pool attributes - thread pool may not exist if Use81StyleExecuteQueues is enabled
@@ -435,7 +454,8 @@ public class StatisticCapturerWLDFQuery extends StatisticCapturer {
 	private final static String ejbStatsQuery;   
 	private final static String wkMgrStatsQuery;   
 	private final static String svrChnlStatsQuery;   
-	private final static String hostMachineStatsQuery;   
+	private final static String hostMachineStatsQuery; 
+	private List<String> metricTypeSet; 
 	
 	// Static initialiser
 	static {

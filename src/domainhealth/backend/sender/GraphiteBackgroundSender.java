@@ -65,7 +65,7 @@ import org.jboss.netty.buffer.ChannelBuffers;
  */
 public class GraphiteBackgroundSender {
 	// Members
-
+	
 	// Constants
 
 	private String carbon_host; //localhost
@@ -80,19 +80,6 @@ public class GraphiteBackgroundSender {
 	private int reconnect_timeout;
 	private int send_buffer_size;
 
-	//server status 
-	private boolean map_server_stats;
-	static final Map<String,Integer> serverStatusMap = new HashMap<String , Integer>() {{
-    		put("SHUTDOWN",new Integer(0));
-    		put("STARTING",new Integer(1));
-    		put("STANDBY",new Integer(2));
-    		put("ADMIN",new Integer(3));
-    		put("RESUMING",new Integer(4));
-    		put("RUNNING",new Integer(5));
-    		put("SUSPENDING",new Integer(6));
-    		put("SHUTTING_DOWN",new Integer(7));
-    		put("FORCE_SUSPENDING",new Integer(8));
-	}};
 
 	//counter MAP
 	private Map<String,Integer> counterMap;
@@ -132,12 +119,8 @@ public class GraphiteBackgroundSender {
 		if(this.send_buffer_size <=0  ) this.send_buffer_size=1048576;
 		AppLog.getLogger().info("Graphite send buffer size set to :"+this.send_buffer_size);
 
-		this.map_server_stats=appProps.getBoolProperty(PropKey.GRAPHITE_MAP_SERVER_STATS_PROP,true);
-		AppLog.getLogger().info("Graphite map Server stats  set to:"+ new Boolean(this.map_server_stats).toString());
-
 		this.metric_use_host=appProps.getBoolProperty(PropKey.GRAPHITE_METRIC_USE_HOST_PROP,true);
 		AppLog.getLogger().info("Graphite use host  set to:"+ new Boolean(this.metric_use_host).toString());
-
 
 		this.metric_host_prefix=appProps.getProperty(PropKey.GRAPHITE_METRIC_HOST_PREFIX_PROP);
 		if(this.metric_host_prefix == null ) this.metric_host_prefix="pro.bbdd";
@@ -285,8 +268,8 @@ public class GraphiteBackgroundSender {
 		if(metric_use_host) {
 			//tree ordered in a host base aproach 
 
-			if(hostName != null && (hostName.length()>0)) 	final_host_name=hostName;
-			else 						final_host_name=metric_default_host;	
+			if(hostName != null && (hostName.length()>0)) 	final_host_name=hostName.toLowerCase();
+			else 						final_host_name=metric_default_host.toLowerCase();	
 	
 		
 			 metric_path_base=metric_host_prefix+"."+
@@ -366,13 +349,15 @@ public class GraphiteBackgroundSender {
 			int size=metricItems.size();
 			//Core Resoutce Type Status
 			if(resourceType.equals("core")) { 
-				if(this.map_server_stats) {
+				//if(this.map_server_stats) {
 					//Status set as first Metric
-					int status=serverStatusMap.get(contentItems.get(1)).intValue();
 					metric_path=metric_path_base+"."+metricItems.get(1); //State
-					channel.write(metric_path+" "+Integer.toString(status)+" "+timestamp+"\n");
+					value = contentItems.get(1); 
+					channel.write(metric_path+" "+ value +" "+timestamp+"\n");
+					
+					
 					counterInc(serverName);
-				} 
+				//} 
 				for(int i=2;i< size; i++) {
                 			//Metric Name is set by us if needed we can place "." to organize graphite tree, so we prefer not to replace dots.
 					//metric_path=metric_path_base+"."+metricItems.get(i).replace('.','_');
