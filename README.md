@@ -10,7 +10,7 @@ A tool designed to provide administrarors with a quick and easy way to monitor a
 
 The main goal of this fork is to add graphite as backend to store metric data and analize them.
 
-This project will focus efforts on collecting and selecting  metrics from any weblogic server better than store or render.
+This project will focus efforts on collecting and selecting  metrics from any weblogic server better than store or render. So we are removed the graphical frontend contained in the original project.
 
 Collected Metrics
 -----------------
@@ -25,7 +25,7 @@ From each managed server DomainHealth try to garther following metrics.
    * Garbage Collection metrics.
 * __Core__: 
    * Server State and Open Sockets
-   * JVM HEAP size,free,%used.
+   * JVM HEAP size,free,%used. 
    * ThreadPool stats.
    * JTA  Transaction stats.
 * __Datasource__:
@@ -42,6 +42,11 @@ From each managed server DomainHealth try to garther following metrics.
    This is a good choice if working with a standalone DomainHealth instalation. If working on a multidomain environtment with graphite you will gather better and faster OS stats with other graphite colecting tools like collectd/hekad/etc.
 * __ExtendedStats__: 
    * ( Only when gather stats with WLDF ) you will get workmanager and server channels stats
+
+**NOTES**
+
+* JVM secction only works for  JVM version equal or  higher than 1.5.
+* JVM stats in "core" section will only appear if not choosed the "jvm" section that gather a more complete JVM set of metrics.
 
 
 
@@ -155,16 +160,6 @@ Configuration Parameters
 * __dh_graphite_metric_host_suffix__: hostname suffix. Default: wls
 * __dh_graphite_default_host__:  “Machine” Name it uses in host based approach ( if not properly configured with console ) and the hostname in the AdminServer data. Default: default_host 
 * __dh_graphite_metric_force_domain_name__: fix bug on read weblogic domain name on server startup in 9.2. Default: my_domain:  
-* __dh_graphite_map_server_stats__:  Map server stats to numbers so the graphite backend will be able to store and render after.
- - SHUTDOWN(0)
- - STARTING(1)
- - STANDBY(2)
- - ADMIN(3)
- - RESUMING(4)
- - RUNNING(5)
- - SHUTTING_DOWN(7)
- - SUSPENDING(6)
- - FORCE_SUSPENDING(8)
 * __dh_graphite_report_dhstats__:  Send data about Domainhealth data retrieval (Only reported over graphite backend). Default : True
 
 
@@ -193,5 +188,35 @@ On both models you can get information on how many and how lond data is gathered
 XXXXX.<DOMAIN_NAME>.dh_stats.servers.<SERVER_INSTANCE_NAME>.retrieve_time
 XXXXX.<DOMAIN_NAME>.dh_stats.servers.<SERVER_INSTANCE_NAME>.number_metrics
 ```
+
+NOTE: in the core metrics there are a "stateVal" which reports on the instance status can be one of these:
+
+* SHUTDOWN = 0;
+* STARTING = 1;
+* RUNNING = 2;
+* STANDBY = 3;
+* SUSPENDING = 4;
+* RESUMING = 5;
+* SHUTTING_DOWN = 6;
+* FAILED = 7;
+* UNKNOWN = 8;
+* SHUTDOWN_PENDING = 9;
+* SHUTDOWN_IN_PROCESS = 10;
+* FAILED_RESTARTING = 11;
+* ACTIVATE_LATER = 12;
+* FAILED_NOT_RESTARTABLE = 13;
+* FAILED_MIGRATABLE = 14;
+* DISCOVERED = 15;
+
+
+Security Issues
+---------------
+
+This tool works fine in any default weblogic  installation.
+If you wish to add authentication  to the JVM by adding __-Xmanagement:authenticate=true__ , you also need to add 
+__-Djavax.management.builder.initial=
+weblogic.management.jmx.mbeanserver.WLSMBeanServerBuilder__ if you want to get JVM statistics.
+
+
 
 
