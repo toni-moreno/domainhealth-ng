@@ -53,6 +53,7 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 	 */
 	public StatisticCapturerJMXPoll(StatisticsStorage csvStats, WebLogicMBeanConnection conn, ObjectName serverRuntime, String serverName, int queryIntervalMillis, List<String> componentBlacklist, List<String> metricTypeSet, String wlsVersionNumber,String jvmVersion) {
 		super(csvStats, conn, serverRuntime, serverName, queryIntervalMillis, componentBlacklist, metricTypeSet,wlsVersionNumber,jvmVersion);
+		this.metricTypeSet = metricTypeSet; 
 	}
 
 
@@ -62,11 +63,22 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 	protected void logCoreStats() throws DataRetrievalException {
 		try {
 		//	String headerLine = getCoreStatsHeaderLine();
-			HeaderLine hl=headerList.get("CORE");
-			String headerLine = hl.header_string;
+			if (!metricTypeSet.contains("jvm"))
+			{
+				HeaderLine hl=headerList.get("CORE_WITH_JVM");
+				String headerLine = hl.header_string;
 
-			String contentLine = getCoreStatsLine();
-			getCSVStats().appendToResourceStatisticsCSV(new Date(), getServerName(), CORE_RESOURCE_TYPE, CORE_RSC_DEFAULT_NAME, headerLine, contentLine,getHostName());
+				String contentLine = getCoreStatsLine();
+				getCSVStats().appendToResourceStatisticsCSV(new Date(), getServerName(), CORE_RESOURCE_TYPE, CORE_RSC_DEFAULT_NAME, headerLine, contentLine,getHostName());
+			}
+			else
+			{
+				HeaderLine hl = headerList.get("CORE_WITHOUT_JVM"); 
+				String headerLine = hl.header_string; 
+				
+				String contentLine = getCoreStatsLine();
+				getCSVStats().appendToResourceStatisticsCSV(new Date(), getServerName(), CORE_RESOURCE_TYPE, CORE_RSC_DEFAULT_NAME, headerLine, contentLine,getHostName());
+			}
 		} catch (Exception e) {
 			throw new DataRetrievalException("Problem logging " + CORE_RESOURCE_TYPE + " resources for server " + getServerName(), e);
 		}		
@@ -86,7 +98,8 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 
 		// Server attributes (not looping because state attr is not a num unlike all other attrs)
 		ObjectName serverRuntime = getServerRuntime();
-		line.append(getConn().getTextAttr(serverRuntime, SERVER_STATE) + SEPARATOR);
+		//line.append(getConn().getTextAttr(serverRuntime, SERVER_STATE) + SEPARATOR);
+		line.append(getConn().getNumberAttr(serverRuntime, SERVER_STATE) + SEPARATOR); 
 		line.append(getConn().getNumberAttr(serverRuntime, OPEN_SOCKETS) + SEPARATOR);
 		
 		// JVM attributes (got to do these separately because changing some figures to MegaBytes and calculate heap size current)
@@ -96,28 +109,37 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 		AppLog.getLogger().debug("JVM Runtime type:"+jvmType);
 		if (jvmType.equalsIgnoreCase("JRockitRuntime")) useJRockit=true;
 
-		long heap_size_current=(long)getConn().getNumberAttr(jvm, HEAP_SIZE_CURRENT);
-		long heap_free_current=(long)getConn().getNumberAttr(jvm, HEAP_FREE_CURRENT);
-		line.append((heap_size_current / BYTES_IN_MEGABYTE) + SEPARATOR);
-		line.append((heap_free_current / BYTES_IN_MEGABYTE) + SEPARATOR);
-		line.append(((heap_size_current - heap_free_current) / BYTES_IN_MEGABYTE) + SEPARATOR);
-		line.append(getConn().getNumberAttr(jvm, HEAP_FREE_PERCENT) + SEPARATOR);
+		if (!metricTypeSet.contains("jvm"))
+		{
+			long heap_size_current=(long)getConn().getNumberAttr(jvm, HEAP_SIZE_CURRENT);
+			long heap_free_current=(long)getConn().getNumberAttr(jvm, HEAP_FREE_CURRENT);
+			line.append((heap_size_current / BYTES_IN_MEGABYTE) + SEPARATOR);
+			line.append((heap_free_current / BYTES_IN_MEGABYTE) + SEPARATOR);
+			line.append(((heap_size_current - heap_free_current) / BYTES_IN_MEGABYTE) + SEPARATOR);
+			line.append(getConn().getNumberAttr(jvm, HEAP_FREE_PERCENT) + SEPARATOR);
+		}
 
 		if(useJRockit) {
 			double jvm_proc_load    =getConn().getNumberAttr(jvm,JVM_PROCESSOR_LOAD);
-			long total_gc_count    =(long)getConn().getNumberAttr(jvm,TOTAL_GC_COUNT);
-			long total_gc_time     =(long)getConn().getNumberAttr(jvm,TOTAL_GC_TIME);
-			long total_nursery_size =(long)getConn().getNumberAttr(jvm,TOTAL_NURSERY_SIZE);
-			long heap_max_size      =(long)getConn().getNumberAttr(jvm,HEAP_SIZE_MAX);
-
 			line.append( ((double)Math.round(jvm_proc_load * 100 * 100) / 100.0) + SEPARATOR);
-			line.append( total_gc_count + SEPARATOR);
-			line.append( total_gc_time + SEPARATOR);
-			line.append( ( total_nursery_size / BYTES_IN_MEGABYTE) + SEPARATOR);
-			line.append( ( heap_max_size / BYTES_IN_MEGABYTE) + SEPARATOR);
+			if (!metricTypeSet.contains("jvm"))
+			{
+				long total_gc_count    =(long)getConn().getNumberAttr(jvm,TOTAL_GC_COUNT);
+				long total_gc_time     =(long)getConn().getNumberAttr(jvm,TOTAL_GC_TIME);
+				long total_nursery_size =(long)getConn().getNumberAttr(jvm,TOTAL_NURSERY_SIZE);
+				long heap_max_size      =(long)getConn().getNumberAttr(jvm,HEAP_SIZE_MAX);
+
+				line.append( total_gc_count + SEPARATOR);
+				line.append( total_gc_time + SEPARATOR);
+				line.append( ( total_nursery_size / BYTES_IN_MEGABYTE) + SEPARATOR);
+				line.append( ( heap_max_size / BYTES_IN_MEGABYTE) + SEPARATOR);
+			}
 
 		} else {
-			for (String attr : JROCKIT_MBEAN_MONITOR_ATTR_LIST) line.append(0 + SEPARATOR);
+			if (!metricTypeSet.contains("jvm"))
+			{
+				for (String attr : JROCKIT_MBEAN_MONITOR_ATTR_LIST) line.append(0 + SEPARATOR);
+			}
 		}
 
 
@@ -388,6 +410,9 @@ public class StatisticCapturerJMXPoll extends StatisticCapturer {
 			line.append(getConn().getNumberAttr(objectName, attr) + SEPARATOR);
 		}
 	}
+	
+	// Members 
+	private List<String> metricTypeSet; 
 
 	// Constants
 //	private static final int DEFAULT_CONTENT_LINE_LEN = 100;

@@ -668,7 +668,8 @@ public abstract class StatisticCapturer {
 
 	static {
 		headerList.put("JVM",new HeaderLine(J_MBEAN_ALL));
-		headerList.put("CORE",new HeaderLine(J_CORE_ALL));
+		headerList.put("CORE_WITH_JVM",new HeaderLine(J_CORE_WITH_JVM));
+		headerList.put("CORE_WITHOUT_JVM", new HeaderLine(J_CORE_WITHOUT_JVM)); 
 		headerList.put("JDBC",new HeaderLine(JDBC_MBEAN_MONITOR_ATTR_LIST));
 		headerList.put("JMS",new HeaderLine(JMS_DESTINATION_MBEAN_MONITOR_ATTR_LIST));
 		headerList.put("WEBAPP",new HeaderLine(WEBAPP_MBEAN_MONITOR_ATTR_LIST));

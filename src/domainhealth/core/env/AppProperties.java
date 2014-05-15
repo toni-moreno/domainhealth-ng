@@ -137,7 +137,7 @@ public class AppProperties extends Properties {
 		/**
 		 * The Graphite  property name ("dh_graphite_map_server_stats")
 		 */
-		GRAPHITE_MAP_SERVER_STATS_PROP { public String toString() { return "dh_graphite_map_server_stats"; } }, 
+		//GRAPHITE_MAP_SERVER_STATS_PROP { public String toString() { return "dh_graphite_map_server_stats"; } }, 
 
 		/**
 		 * The Graphite  property name ("dh_graphite_metric_use_host")
