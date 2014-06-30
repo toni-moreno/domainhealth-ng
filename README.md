@@ -213,9 +213,17 @@ Security Issues
 ---------------
 
 This tool works fine in any default weblogic  installation.
-If you wish to add authentication  to the JVM by adding __-Xmanagement:authenticate=true__ , you also need to add 
-__-Djavax.management.builder.initial=
-weblogic.management.jmx.mbeanserver.WLSMBeanServerBuilder__ if you want to get JVM statistics.
+If you wish to add authentication  to the JVM by adding:
+```
+-Xmanagement:authenticate=true
+```
+you also need to add: 
+```
+-Djavax.management.builder.initial=
+weblogic.management.jmx.mbeanserver.WLSMBeanServerBuilder
+```
+if you want to get JVM statistics.
+
 
 
 
