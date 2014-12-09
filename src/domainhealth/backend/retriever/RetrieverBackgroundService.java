@@ -237,11 +237,12 @@ public class RetrieverBackgroundService {
 		}
 		
 		if (useWLDFHarvester) {				
-			HarvesterWLDFModuleCreator harvesterModule = new HarvesterWLDFModuleCreator(queryIntervalMillis, domainhealthVersionNumber, wlsVersionNumber, domainhealthCompilationTime);
+			HarvesterWLDFModuleCreator harvesterModule = new HarvesterWLDFModuleCreator(queryIntervalMillis, domainhealthVersionNumber, wlsVersionNumber, domainhealthCompilationTime, metricTypeSet);
 			
 			if (harvesterModule.isDomainHealthAbleToUseWLDF()) {
 				useWLDFHarvester = true;					
-				harvesterModule.createIfNeeded();
+				//harvesterModule.createIfNeeded();
+				harvesterModule.createAlways(); 
 			} else {
 				useWLDFHarvester = false;					
 				AppLog.getLogger().warning("WLDF module creation problems occurred. WLDF Capture mode can't be used - must use JMX Poll mode instead");
@@ -276,10 +277,11 @@ public class RetrieverBackgroundService {
 			for (int i = 0; i < length; i++) {
 				final String serverName = conn.getTextAttr(serverRuntimes[i], NAME);
 				final String serverHost = conn.getTextAttr(serverRuntimes[i],"CurrentMachine");
+
 				if(( serverHost==null ) || ( serverHost.length() == 0 )) 
-					AppLog.getLogger().info("SERVER :"+serverName+" OVER MACHINE: "+serverHost);
-				else 
 					AppLog.getLogger().info("SERVER :"+serverName+" OVER MACHINE: <NOT SET IN CONFIG>");
+				else 	
+					AppLog.getLogger().info("SERVER :"+serverName+" OVER MACHINE: "+serverHost);
 
 				final StatisticCapturer capturer = getStatisticCapturer(conn, serverRuntimes[i], serverName);
 				capturer.setHost(serverHost);

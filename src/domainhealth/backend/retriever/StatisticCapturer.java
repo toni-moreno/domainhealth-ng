@@ -76,7 +76,7 @@ public abstract class StatisticCapturer {
 		this.wlsVersionNumber = wlsVersionNumber;
 		this.metricTypeSet = metricTypeSet;
 		this.jvmVersion	= jvmVersion;
-		/*TODO array de strings con cabecceras de cada tipo preparadas.., para no construirlas cada vez, SON ESTATICAS!!*/
+		/*TODO array de strings con cabeceras de cada tipo preparadas.., para no construirlas cada vez, SON ESTATICAS!!*/
 
 	}
 
@@ -93,7 +93,7 @@ public abstract class StatisticCapturer {
 		//TODO: execute reflected methods ?
 		for (String type : metricTypeSet) {
  		   if(type.equalsIgnoreCase("jvm")){
-			//Only for JVM 1.5 /1.6 and avobe 
+			//Only for JVM 1.5 /1.6 and above 
 			if(Integer.parseInt(jvmVersion)>=5)	logJvmStats();
  		   } else if(type.equalsIgnoreCase("core")){
 			logCoreStats();
