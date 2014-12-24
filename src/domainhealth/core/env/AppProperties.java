@@ -127,6 +127,10 @@ public class AppProperties extends Properties {
 		 */
 		GRAPHITE_RECONNECT_TIMEOUT_PROP { public String toString() { return "dh_graphite_reconnect_timeout"; } }, 
 		/**
+		 * The Graphite  property name ("dh_graphite_reconect_timeout")
+		 */
+		GRAPHITE_FORCE_RECONNECT_TIMEOUT_PROP { public String toString() { return "dh_graphite_force_reconnect_timeout"; } }, 
+		/**
 		 * The Graphite  property name ("dh_graphite_send_buffer_size")
 		 */
 		GRAPHITE_SEND_BUFFER_SIZE_PROP { public String toString() { return "dh_graphite_send_buffer_size"; } }, 

@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelEvent;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -46,66 +47,62 @@ import java.text.SimpleDateFormat;
  */
 public class GraphiteClientHandler extends SimpleChannelUpstreamHandler {
 
-//      private GraphiteBackgroundSender gSender;
-        private  int RECONNECT_TIMEOUT = 5;
+    protected boolean disconnect_forced=false;
+    private int RECONNECT_TIMEOUT = 5;
+    private int FORCE_RECONNECT_TIMEOUT=180;
 	public static final String DATE_FORMAT_NOW = "yyyy-MM-dd HH:mm:ss";
 	private SimpleDateFormat sdf;
 
-  
 
 	final ClientBootstrap bootstrap;
-      private final Timer timer;
-      private long startTime = -1;
+    private final Timer timer;
+    private long startTime = -1;
   
-      public GraphiteClientHandler(ClientBootstrap bootstrap, Timer timer) {
-          this.bootstrap = bootstrap;
-          this.timer = timer;
-	  this.sdf = new SimpleDateFormat(DATE_FORMAT_NOW);
-      }
+    public GraphiteClientHandler(ClientBootstrap bootstrap, Timer timer) {
+        this.bootstrap = bootstrap;
+        this.timer = timer;
+        this.sdf = new SimpleDateFormat(DATE_FORMAT_NOW);
+    }
 
-	/*
-      public void setSender(GraphiteBackgroundSender gSender) {
- 		this.gSender=gSender;
-      }*/
-      public void setReconnectTimeout(int timeout) {
-		this.RECONNECT_TIMEOUT=timeout;
-      }
+    public void setReconnectTimeout(int timeout) {
+        this.RECONNECT_TIMEOUT=timeout;
+    }
+    
+    public void setForceReconnectTimeout(int timeout) {
+        this.FORCE_RECONNECT_TIMEOUT=timeout;
+    }
 
     InetSocketAddress getRemoteAddress() {
-     return (InetSocketAddress) bootstrap.getOption("remoteAddress");
-     }
+        return (InetSocketAddress) bootstrap.getOption("remoteAddress");
+    }
 
     @Override
-     public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
-     //System.out.println("Disconnected from: " + getRemoteAddress());
-	 
-		println("Disconnected from: " + getRemoteAddress());
-
-     }
-
-  @Override
-  public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) {
-      println("Sleeping for: " + this.RECONNECT_TIMEOUT + 's');
-	  println("ChannelClosed: " + GraphiteBackgroundSender.isShuttingDown()); 
-	  if (!GraphiteBackgroundSender.isShuttingDown())
-	  {
-		timer.newTimeout(new TimerTask() {
-		public void run(Timeout timeout) throws Exception {
-			try {
-                println("Reconnecting to: " + getRemoteAddress());
-				bootstrap.connect();
-			} catch (Exception e) {
-				AppLog.getLogger().error("Error cn trying to reconnect after Reconnect timeout expired : " + e.getMessage(),e);
-			}
-          }}, this.RECONNECT_TIMEOUT, TimeUnit.SECONDS);
-	   }
-
-      
-  }
+    public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
+        println("Disconnected from: " + getRemoteAddress());
+    }
 
     @Override
-    public void handleUpstream(
-            ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
+    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) {
+        if(this.disconnect_forced) {
+            bootstrap.connect();
+            this.disconnect_forced=false;
+            return;
+        }
+        println("Sleeping for: " + this.RECONNECT_TIMEOUT + 's');
+        timer.newTimeout(new TimerTask() {
+            public void run(Timeout timeout) throws Exception {
+                try {
+              		println("Reconnecting to: " + getRemoteAddress());
+                    bootstrap.connect();
+                } catch (Exception e) {
+                    AppLog.getLogger().error("Error cn trying to reconnect after Reconnect timeout expired : " + e.getMessage(),e);
+                }
+            }
+        }, this.RECONNECT_TIMEOUT, TimeUnit.SECONDS);
+    }
+
+    @Override
+    public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
         if (e instanceof ChannelStateEvent) {
             println(e.toString());
         }
@@ -113,50 +110,58 @@ public class GraphiteClientHandler extends SimpleChannelUpstreamHandler {
     }
 
     @Override
-    public void messageReceived(
-            ChannelHandlerContext ctx, MessageEvent e) {
+    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
         // Print out the line received from the server.
         println("GRAPHITE SERVER SEND MESSAGE !! :"+e.getMessage());
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-	Throwable cause = e.getCause();
-  	 if (cause instanceof ConnectException) {
-              startTime = -1;
-	      AppLog.getLogger().error("Failed to connect: "+ cause.getMessage(),cause);
-              //println("Failed to connect: " + cause.getMessage());
-          }
-          if (cause instanceof ReadTimeoutException) {
-              // The connection was OK but there was no traffic for last period.
-			AppLog.getLogger().error("Disconnecting due to read timeout " + cause.getMessage(),cause);
-              //println("Disconnecting due to no inbound traffic");
-          } else {
-			AppLog.getLogger().error("Disconnecting due to no inbound traffic " + cause.getMessage(),cause);
-             
-			//cause.printStackTrace();
-          }
-          ctx.getChannel().close();
-        //e.getChannel().close();
+        Throwable cause = e.getCause();
+        if (cause instanceof ConnectException) {
+            startTime = -1;
+            AppLog.getLogger().error("Failed to connect: "+ cause.getMessage(),cause);
+        }
+        if (cause instanceof ReadTimeoutException) {
+            // The connection was OK but there was no traffic for last period.
+            AppLog.getLogger().error("Disconnecting due to no inbound traffic " + cause.getMessage(),cause);
+        } else {
+            cause.printStackTrace();
+        }
+        ctx.getChannel().close();
     }
 
-  @Override
-  public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
-    if (startTime < 0) {
-           startTime = System.currentTimeMillis();
-     }
-	println("Connected to: " + getRemoteAddress());
-  }
+    @Override
+    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
+        if(this.FORCE_RECONNECT_TIMEOUT > 0) {                    
+            final Channel channel=ctx.getChannel();
+            println("Programming force reconnect on : " + this.FORCE_RECONNECT_TIMEOUT + 's');
+            timer.newTimeout(new TimerTask() {
+                public void run(Timeout timeout) throws Exception {
 
-   void println(String msg) {
-	  String date=sdf.format(new Date());
-          if (startTime < 0) {
-	      AppLog.getLogger().warning(String.format("%s :[CONNECTION IS DOWN] %s",date, msg));
-              //System.err.format("%s :[SERVER IS DOWN] %s%n",date, msg);
+                    try {
+                        println("Force close connection to: " + getRemoteAddress());
+                        channel.disconnect();
+                        disconnect_forced=true;
+                    } catch (Exception e) {
+                        AppLog.getLogger().error("Error on trying to force close connection : " + e.getMessage(),e);
+                    }
+                }
+            }, this.FORCE_RECONNECT_TIMEOUT, TimeUnit.SECONDS);
+        }
+        if (startTime < 0) {
+            startTime = System.currentTimeMillis();
+        }
+        println("Connected to: " + getRemoteAddress());
+    }
+
+    void println(String msg) {
+        String date=sdf.format(new Date());
+        if (startTime < 0) {
+            AppLog.getLogger().warning(String.format("%s :[CONNECTION IS DOWN] %s",date, msg));
           } else {
-	      AppLog.getLogger().warning(String.format("%s :[UPTIME: %5ds] %s",date,(System.currentTimeMillis() - startTime) / 1000,msg));
-              //System.err.format("%s :[UPTIME: %5ds] %s%n",date, (System.currentTimeMillis() - startTime) / 1000, msg);
-   }
-      }
+            AppLog.getLogger().warning(String.format("%s :[UPTIME: %5ds] %s",date,(System.currentTimeMillis() - startTime) / 1000,msg));
+        }
+    }
 }
 

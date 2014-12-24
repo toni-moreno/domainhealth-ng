@@ -78,6 +78,7 @@ public class GraphiteBackgroundSender {
 	private boolean metric_use_host;
 	private static boolean is_shutting_down; 
 	private int reconnect_timeout;
+    private int force_reconnect_timeout;
 	private int send_buffer_size;
 
 
@@ -113,7 +114,11 @@ public class GraphiteBackgroundSender {
 
 		this.reconnect_timeout=appProps.getIntProperty(PropKey.GRAPHITE_RECONNECT_TIMEOUT_PROP);
 		if(this.reconnect_timeout <=0  ) this.reconnect_timeout=60;
-		AppLog.getLogger().info("Graphite reconect timeout set to:"+this.reconnect_timeout);
+		AppLog.getLogger().info("Graphite reconnect timeout set to:"+this.reconnect_timeout);
+        
+        this.force_reconnect_timeout=appProps.getIntProperty(PropKey.GRAPHITE_FORCE_RECONNECT_TIMEOUT_PROP);
+		if(this.force_reconnect_timeout <=0  ) this.force_reconnect_timeout=60;
+		AppLog.getLogger().info("Graphite force reconnect timeout set to:"+this.force_reconnect_timeout);
 
 		this.send_buffer_size=appProps.getIntProperty(PropKey.GRAPHITE_SEND_BUFFER_SIZE_PROP);
 		if(this.send_buffer_size <=0  ) this.send_buffer_size=1048576;

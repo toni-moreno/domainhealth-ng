@@ -35,29 +35,28 @@ public class GraphiteClientPipelineFactory implements ChannelPipelineFactory {
 
 	final ClientBootstrap bootstrap;
 	private ChannelPipeline current_pipeline;
-    	private final Timer timer;
+    private final Timer timer;
 	private GraphiteClientHandler gch;
-//	private GraphiteBackgroundSender gSender;
 	private int RECONNECT_TIMEOUT = 5;
+    private int FORCE_RECONNECT_TIMEOUT = 180;
 
    	public  GraphiteClientPipelineFactory(ClientBootstrap bootstrap, Timer timer){
 		this.bootstrap=bootstrap;
 		this.timer=timer;
 	}
-/*
-    public void setSender(GraphiteBackgroundSender gSender) {
-		this.gSender=gSender;
-    }*/
-     
-   public void setReconnectTimeout(int timeout) {
-		this.RECONNECT_TIMEOUT=timeout;
-   }
+
+    public void setReconnectTimeout(int timeout) {
+        this.RECONNECT_TIMEOUT=timeout;
+    }
+   
+    public void setForceReconnectTimeout(int timeout){
+        this.FORCE_RECONNECT_TIMEOUT=timeout;
+    }
     public ChannelPipeline getPipeline() throws Exception {
-        // Create a default pipeline implementation.
         current_pipeline = pipeline();
-	gch= new GraphiteClientHandler(this.bootstrap,this.timer);
-	//gch.setSender(gSender);
-	gch.setReconnectTimeout(RECONNECT_TIMEOUT);
+        gch= new GraphiteClientHandler(this.bootstrap,this.timer);
+        gch.setReconnectTimeout(RECONNECT_TIMEOUT);
+        gch.setForceReconnectTimeout(FORCE_RECONNECT_TIMEOUT);
 
         // Add the text line codec combination first,
         current_pipeline.addLast("framer", new DelimiterBasedFrameDecoder(
