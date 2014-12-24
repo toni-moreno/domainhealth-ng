@@ -117,7 +117,7 @@ public class GraphiteBackgroundSender {
 		AppLog.getLogger().info("Graphite reconnect timeout set to:"+this.reconnect_timeout);
         
         this.force_reconnect_timeout=appProps.getIntProperty(PropKey.GRAPHITE_FORCE_RECONNECT_TIMEOUT_PROP);
-		if(this.force_reconnect_timeout <=0  ) this.force_reconnect_timeout=60;
+		if(this.force_reconnect_timeout <=0  ) this.force_reconnect_timeout=0;
 		AppLog.getLogger().info("Graphite force reconnect timeout set to:"+this.force_reconnect_timeout);
 
 		this.send_buffer_size=appProps.getIntProperty(PropKey.GRAPHITE_SEND_BUFFER_SIZE_PROP);
@@ -188,6 +188,7 @@ public class GraphiteBackgroundSender {
 			gpf=new GraphiteClientPipelineFactory(bootstrap,timer);
 			//gpf.setSender(this);
 			gpf.setReconnectTimeout(this.reconnect_timeout);
+            gpf.setForceReconnectTimeout(this.force_reconnect_timeout);
 
 			bootstrap.setPipelineFactory(gpf);
 			bootstrap.setOption("tcpNoDelay" , true);

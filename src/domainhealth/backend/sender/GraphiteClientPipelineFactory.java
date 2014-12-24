@@ -38,7 +38,7 @@ public class GraphiteClientPipelineFactory implements ChannelPipelineFactory {
     private final Timer timer;
 	private GraphiteClientHandler gch;
 	private int RECONNECT_TIMEOUT = 5;
-    private int FORCE_RECONNECT_TIMEOUT = 180;
+    private int FORCE_RECONNECT_TIMEOUT = 0;
 
    	public  GraphiteClientPipelineFactory(ClientBootstrap bootstrap, Timer timer){
 		this.bootstrap=bootstrap;
