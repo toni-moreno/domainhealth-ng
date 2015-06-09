@@ -154,6 +154,8 @@ Configuration Parameters
 * __dh_graphite_carbon_host__: Graphite carbon server carbon (Graphite) Default: localhost
 * __dh_graphite_carbon_port__: carbon port ( Graphite) Default: 2003
 * __dh_graphite_reconnect_timeout__: Reconnection attempt time after connection lost in seconds. Default: 60 seconds
+* __dh_graphite_force_reconnect_timeout__: This parameter forced close and after open after some amount of time in seconds or 0 if disabled. This parameter could be important on balanced environments enabling load rebalance when several
+ domainhealths are sending metrics to the same graphite backend
 * __dh_graphite_send_buffer_size__:  Graphite output buffer size on heavily loaded systems better big buffers. Default: 1Mb
 * __dh_graphite_metric_use_host__: Enable a metric tree based on host better than a domain tree based approach. Default: True
 * __dh_graphite_metric_host_prefix__: hostname prefix. Default: pro.bbdd
