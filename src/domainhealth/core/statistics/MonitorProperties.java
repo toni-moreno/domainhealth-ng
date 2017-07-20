@@ -122,7 +122,7 @@ public class MonitorProperties {
 			//jms
 			jms_list        = new String[] {MESSAGES_CURRENT_COUNT, MESSAGES_PENDING_COUNT, CONSUMERS_CURRENT_COUNT};
 			//webapp
-			webapp_list	= new String[] {SESSIONS_TOTAL_COUNT};
+			webapp_list	= new String[] {SESSIONS_CURRENT_COUNT};
 			//ejb 
 			ejbpool_list	= new String[] {BEAN_ACCESS_TOTAL_COUNT, BEANS_INUSE_CURRENT_COUNT, BEAN_WAITING_TOTAL_COUNT};
 			ejbtrans_list	= new String[] {BEAN_TRANSACTIONS_ROLLEDBACK_TOTAL_COUNT};

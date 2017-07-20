@@ -50,11 +50,11 @@ public class RegExpTest extends TestCase {
 	 * Test method
 	 */	
     public void testWLDFModuleVersionTextVersion() {
-    	HarvesterWLDFModuleCreator harvesterWLDFModuleCreator1 = new HarvesterWLDFModuleCreator(60*1000, "0.9.0b3", "10.3.5");
+    	HarvesterWLDFModuleCreator harvesterWLDFModuleCreator1 = new HarvesterWLDFModuleCreator(60*1000, "0.9.0b3", "10.3.5","",null);
     	assertTrue(harvesterWLDFModuleCreator1.doesModuleDescriptionContainCurrentModuleVersion("WLDF Module for DH. v0.9.0b3."));
     	assertTrue(harvesterWLDFModuleCreator1.doesModuleDescriptionContainCurrentModuleVersion(". v0.9.0b3."));
     	assertFalse(harvesterWLDFModuleCreator1.doesModuleDescriptionContainCurrentModuleVersion(". v0.0.0."));
-    	HarvesterWLDFModuleCreator harvesterWLDFModuleCreator2 = new HarvesterWLDFModuleCreator(60*1000, "0.9b3", "10.3.5");
+    	HarvesterWLDFModuleCreator harvesterWLDFModuleCreator2 = new HarvesterWLDFModuleCreator(60*1000, "0.9b3", "10.3.5","",null);
     	assertTrue(harvesterWLDFModuleCreator2.doesModuleDescriptionContainCurrentModuleVersion(". v0.9b3."));
     }
     

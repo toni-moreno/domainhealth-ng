@@ -31,6 +31,7 @@
 				<include name="*.jar"/>
 			</fileset>
 			<pathelement path="${weblogic-home}/server/lib/weblogic.jar"/>
+                        <pathelement path="lib/weblogic.jar"/>
 		</path>      
 
 		<taskdef name="wldeploy" classpathref="CLASSPATH" classname="weblogic.ant.taskdefs.management.WLDeploy"/>
